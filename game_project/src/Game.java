@@ -45,8 +45,8 @@ public class Game {
         }
     }
 
-    public static void printState(int stateId){
-        switch (stateId){
+    public static void printState(int currentState){
+        switch (currentState){
             case 0: System.out.println("You decide to inspect the ceiling, hoping to find\n " +
                     "an air vent or hidden passage. Your eyes scan the cracked tiles above,\n " +
                     "but all you notice is the faint hum of the flickering lights.\n " +
