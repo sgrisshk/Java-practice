@@ -38,10 +38,10 @@ public class Game {
     }
     public static int takeAction(String action, int currentState) {
         switch (action) {
-            case "open the door" -> currentState = 1;
-            case "take them" -> currentState = 2;
-            case "go east" -> currentState = 3;
-            default -> {
+            case "open the door": currentState = 1;
+            case "take them": currentState = 2;
+            case "go east": currentState = 3;
+            default : {
                 currentState = 0;
             }
         }
@@ -50,13 +50,13 @@ public class Game {
 
     public static void printState(int currentState){
         switch (currentState){
-            case 0 -> System.out.println("You decide to inspect the ceiling, hoping to find\n " +
+            case 0: System.out.println("You decide to inspect the ceiling, hoping to find\n " +
                     "an air vent or hidden passage. Your eyes scan the cracked tiles above,\n " +
                     "but all you notice is the faint hum of the flickering lights.\n " +
                     "There's no secret escape, just the same looming choices ahead.\n " +
                     "The corridor feels colder now, as if urging you to make a real decision.\n");
 
-            case 1 -> System.out.println("You step through the metallic door and into a dim corridor,\n " +
+            case 1 : System.out.println("You step through the metallic door and into a dim corridor,\n " +
                     "where the walls are lined with cracked, flickering lights. In the distance,\n " +
                     "you hear mechanical sounds, like the clank of metal against metal.\n " +
                     "To your east, a control panel flickers with life.\n " +
@@ -64,12 +64,12 @@ public class Game {
                     "You can feel the weight of the unknown pressing down on you.\n " +
                     "The way back to the control room is to the south.\n");
 
-            case 2 -> System.out.println("You grab the radio from the desk, wiping away the dust.\n " +
+            case 2: System.out.println("You grab the radio from the desk, wiping away the dust.\n " +
                     "As you hold it, you hear static followed by a broken transmission:\n " +
                     "\"If you... hear this... get to the east side... the only safe... is...\"\n " +
                     "The signal cuts out. You now hold the radio in your hand, hoping it might help you\n " +
                     "survive in this unforgiving world.\n");
-            case 3 -> System.out.println( "As you move east, the air feels colder,\n " +
+            case 3: System.out.println( "As you move east, the air feels colder,\n " +
                     "and the lights dim even more. You reach a room \n" +
                     "filled with blinking screens and a large map of the area.\n" +
                     "A man stands near the map, dressed in a lab coat and frantically\n " +
@@ -78,7 +78,7 @@ public class Game {
                     "We’re running out of time.\" Behind him, the map shows the last known safe zones,\n " +
                     "each one crossed out.\n ");
 
-            default -> {break;}
+            default: {break;}
         }
     }
 
