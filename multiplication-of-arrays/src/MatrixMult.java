@@ -1,60 +1,74 @@
 import java.util.Scanner;
+
 public class MatrixMult {
-    public static double[][] multiplyMatrices(double[][] firstMatrix, double[][]
-            secondMatrix,int n,int m,int y) {
-        double[][] matrix = new double[n][y];
+
+    public static double[][] multiplyMatrices(double[][] firstMatrix, double[][] secondMatrix) {
+        int n = firstMatrix.length;
+        int m = firstMatrix[0].length;
+        int y = secondMatrix[0].length;
+
+        double[][] resultMatrix = new double[n][y];
+
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < y; j++) {
                 for (int k = 0; k < m; k++) {
-                    matrix[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
+                    resultMatrix[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
                 }
             }
         }
-        return matrix;
+
+        return resultMatrix;
     }
 
     public static void printMatrix(double[][] matrix) {
-        System.out.print("Matrix:\n ");
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
-                System.out.print(matrix[i][j] + "   ");
+                System.out.print(matrix[i][j] + " ");
             }
-            System.out.println("\n");
+            System.out.println();
         }
     }
 
-    public static double[][] fillMatrix(int n, int m){
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Enter the matrix:\n");
-            double[][] matrix = new double[n][m];
-            for (int i=0; i < n; i++){
-                for (int j=0; j < m; j++){
-                    matrix[i][j] = scanner.nextDouble();
-                }
+    public static double[][] fillMatrix(int rows, int cols) {
+        Scanner scanner = new Scanner(System.in);
+        double[][] matrix = new double[rows][cols];
+
+        System.out.println("Insert elements of matrix (" + rows + "x" + cols + "):");
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                matrix[i][j] = scanner.nextDouble();
             }
-            return matrix;
         }
+
+        return matrix;
+    }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter the first matrix length:");
-        int m = scanner.nextInt();
-        System.out.println("Enter the first matrix width:");
+
+        System.out.println("Insert the amount of rows and columns of first matrix:");
         int n = scanner.nextInt();
-        double[][] firstMatrix = fillMatrix(n,m);
-        System.out.println("Enter the second matrix length:");
-        int y = scanner.nextInt();
-        System.out.println("Enter the second matrix width:");
-        int x = scanner.nextInt();
-        double[][] secondMatrix = fillMatrix(x,y);
-        if (m!=x){
-            System.out.println("You can't multiply those matrices");
+        int m = scanner.nextInt();
+
+        System.out.println("Insert the amount of rows and columns of second matrix:");
+        int m2 = scanner.nextInt();
+
+        if (m != m2) {
+            System.out.println("Multiplication is impossible: the number of columns of the first matrix (\" + m + \") "+"" +
+                    "must match the number of rows of the second matrix (\" + m2 + \").");
             System.exit(0);
         }
-        else{
-            printMatrix(multiplyMatrices(firstMatrix,secondMatrix,n,m,y));
-        }
-        }
+
+        int y = scanner.nextInt();
+
+
+        double[][] firstMatrix = fillMatrix(n, m);
+
+        double[][] secondMatrix = fillMatrix(m2, y);
+
+
+        System.out.println("Result:");
+        printMatrix(multiplyMatrices(firstMatrix, secondMatrix));
     }
-
-
+}
