@@ -1,24 +1,17 @@
-import java.util.Objects;
 import java.util.Scanner;
 import java.time.Year;
 
 public class Game {
     private static Scanner scanner;
 
+    //Method of getting users name
     public static void getName() {
-        System.out.println("\nwhat's your name?:");
+        System.out.println("\nWhat's your name?:");
         String name = scanner.nextLine();
-        System.out.println("Hey, " + name + "!");
+        System.out.println("Hey, " + name + "! Enjoy the game:)");
     }
 
-    public static void calculateAge() {
-        System.out.println("\nWhen were you born?(only year):");
-        int birthYear = scanner.nextInt();
-        int currentYear = Year.now().getValue();
-        int age = currentYear - birthYear;
-        System.out.println("You are " + age + " years old.");
-    }
-
+    // Method of getting action
     public static String getInput() {
         System.out.println("\nWhat would you like to do?:");
         scanner.nextLine();
@@ -26,9 +19,13 @@ public class Game {
         if (action.equals("666")) {
             System.exit(0);
         } else {
-            if (action.equals("open the door") || action.equals("go north") || action.equals("go south")||
-            action.equals("go east") ||  action.equals("go west") || action.equals("take item")||
-            action.equals("drop item") || action.equals("use item")) {
+            // All possible actions
+            if (action.equals("open the door") || action.equals("go north") || action.equals("go south")
+                    || action.equals("go east") || action.equals("go west") || action.equals("take item")
+                    || action.equals("drop item") || action.equals("use item") || action.equals("inspect room")
+                    || action.equals("climb ladder") || action.equals("investigate vent") || action.equals("talk")
+                    || action.equals("run") || action.equals("hide") || action.equals("defuse trap")
+                    || action.equals("fight") || action.equals("search room") || action.equals("open secret passage")) {
                 return action;
             } else {
                 System.out.println("Invalid input");
@@ -37,7 +34,27 @@ public class Game {
         return null;
     }
 
-    public static int takeAction(String action, int currentState, String[][] stateMatrix) {
+
+    // Method that gets a player action and allows to understand which story we should print
+    public static int takeAction(String action, int currentState, String[][] stateMatrix, String[] storiesStorage) {
+        // Check for game ending states
+        // Check if the player reached an ending state
+        if (currentState == 10 && action.equals("use item")) {
+            System.out.println("You used the item to stabilize the machine...");
+            return 19;  // Good Ending
+        }
+
+        if (currentState == 10 && action.equals("run")) {
+            System.out.println("You tried to escape the machine's power...");
+            return 20;  // Neutral Ending
+        }
+
+        if (currentState == 8 && action.equals("fight")) {
+            System.out.println("You couldn't defeat the overwhelming forces...");
+            return 21;  // Bad Ending
+        }
+
+        // Normal state transition logic
         for (int i = 0; i < stateMatrix.length; i++) {
             for (int j = 0; j < stateMatrix[i].length; j++) {
                 if (action.equals(stateMatrix[i][j])) {
@@ -49,10 +66,7 @@ public class Game {
         return currentState;
     }
 
-    public static void getStory(int stateId, String[] storyArray) {
-        System.out.println(storyArray[stateId]);
-    }
-
+    // Printing method
     public static void printState(int currentState, String[] storiesStorage) {
         System.out.println(storiesStorage[currentState]);
     }
@@ -63,76 +77,770 @@ public class Game {
                 " ┃ ┣┓┏┓  ┗┓┣┓┏┓╋╋┏┓┏┓┏┓┏┫  ┃┃┏┓╋┣┓\n" +
                 " ┻ ┛┗┗   ┗┛┛┗┗┻┗┗┗ ┛ ┗ ┗┻  ┣┛┗┻┗┛┗\n");
 
-        System.out.println("\nby: Sofya Grishkova");
 
         int currentState = 0;
         getName();
-        calculateAge();
+        //calculateAge();
 
-        String[][] statesMatrix = {{" ", "open the door", "take item", " ", " ", " "},
-                {"go south", " ", " ", "go east", " ", " "},
-                {" ", " ", " ", " ", "open the door", " "},
-                {" ", " ", " ", " ", " ", " "},
-                {" ", "drop item", " ", " ", " ", "go north"},
-                {" ", "go south", " ", " ", " ", " "}};
+        // State matrix with transitions leading to ending states
+        String[][] statesMatrix = {
+                {"go south", "open the door", "take item", "go east", "inspect room", "search room"},  // State 0
+                {"go north", "go east", "talk", "go west", "run", "use item"},                         // State 1
+                {"defuse trap", "talk", "go south", "fight", "open the door", "search room"},          // State 2
+                {"go east", "climb ladder", "investigate vent", "go west", "drop item", "use item"},   // State 3
+                {"go north", "go west", "drop item", "open secret passage", "go south", "run"},        // State 4
+                {"climb ladder", "go south", "take item", "hide", "fight", "go east"},                 // State 5
+                {"go north", "fight", "climb ladder", "investigate vent", "talk", "open the door"},    // State 6
+                {"hide", "run", "talk", "use item", "inspect room", "go west"},                        // State 7
+                {"take item", "fight", "defuse trap", "go east", "search room", "climb ladder"},       // State 8
+                {"use item", "fight", "talk", "run", "climb ladder", "enter secret passage"},          // State 9
+                {"defuse trap", "run", "hide", "fight", "open the door", "go west"},                   // State 10
+                {"inspect room", "open secret passage", "run", "fight", "use item", "defuse trap"},    // State 11
+                {"win", "lose", "activate machine"}                                                   // State leading to win/lose/final states
+        };
 
+        // Story array
         String[] storiesStorage = new String[100];
-        storiesStorage[0] = ("You decide to inspect the ceiling, hoping to find\n" +
-                "an air vent or hidden passage. Your eyes scan the cracked tiles above,\n" +
-                "but all you notice is the faint hum of the flickering lights.\n" +
-                "There's no secret escape, just the same looming choices ahead.\n" +
-                "The corridor feels colder now, as if urging you to make a real decision.\n");
-        storiesStorage[1] = ("You step through the metallic door and into a dim corridor,\n" +
-                "where the walls are lined with cracked, flickering lights. In the distance,\n" +
-                "you hear mechanical sounds, like the clank of metal against metal.\n" +
-                "To your east, a control panel flickers with life.\n" +
-                "To the north, you sense a faint draft.\n" +
-                "You can feel the weight of the unknown pressing down on you.\n" +
-                "The way back to the control room is to the south.\n");
-        storiesStorage[2] = ("You grab the radio from the desk, wiping away the dust.\n" +
-                "As you hold it, you hear static followed by a broken transmission:\n" +
-                "\"If you... hear this... get to the east side...the only safe... is...\"\n" +
-                "The signal cuts out. You now hold the radio in your hand, hoping it might help you\n" +
-                "survive in this unforgiving world.\n");
-        storiesStorage[3] = ("As you move east, the air feels colder,\n" +
-                "and the lights dim even more. You reach a room \n" +
-                "filled with blinking screens and a large map of the area.\n" +
-                "A man stands near the map, dressed in a lab coat and frantically\n" +
-                "scribbling notes. His eyes meet yours, filled with both fear and hope.\n" +
-                "Before you can speak, he says, \"You have to help us... The system is failing...\n" +
-                "We’re running out of time.\" Behind him, the map shows the last known safe zones,\n" +
-                "each one crossed out.\n");
-        storiesStorage[4] = ("You step into a room where an eerie silence fills the air.\n" +
-                "The only light comes from a faintly glowing monitor on an old desk.\n" +
-                "The walls are covered in maps, each one telling a story of long-forgotten locations.\n" +
-                "Dust lingers in the air, and the smell of aged paper surrounds you.\n" +
-                "A single piece of paper lies on the desk, with strange symbols scribbled across it.\n" +
-                "To the west, there’s a door that seems slightly ajar, while to the north, you notice a large metallic cabinet, sealed tightly.\n" +
-                "The feeling of unease creeps up your spine as you sense you’re not alone here.");
-        storiesStorage[5] = ("You walk through the narrow corridor, your footsteps echoing in the hollow space.\n" +
-                "Flickering lights overhead cast long shadows on the cracked walls.\n" +
-                "As you continue, you notice a small, partially open vent to the east.\n" +
-                "The faint sound of whispers reaches your ears from within, but it’s unclear what they’re saying.\n" +
-                "Further down the corridor, a rusted ladder leads up to a hatch in the ceiling.\n" +
-                "To the south, you see the familiar metallic door you came through earlier.\n" +
-                "A strange chill fills the air, urging you to decide quickly:\n" +
-                " do you investigate the vent, climb the ladder, or return to the safety of the previous room?\n");
 
-        System.out.println( "\nYou find yourself in a dimly lit control room\n " +
-                "filled with flashing lights and monitors showing live feeds\n " +
-                "of desolate streets. The air is thick with tension,\n " +
-                "and the distant hum of machines fills your ears. On a desk nearby,\n " +
-                "there’s a cryptic note and an old, dust-covered radio.\n " +
-                "A large metallic door to the south hums with energy.\n " +
-                "You sense that danger is close, but you're unsure\n" +
-                "from where it will come.\n");
+        storiesStorage[0] = ("████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "█████▓▓█████████▓███████████████████████████▓▓██\n" +
+                "█░▒█░▓▓██▓▓▓▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓▓▓▓▓▓▓▓████▓░░\n" +
+                "█░░▓██░██░▓░░██░ ░░██▓█░██████▓█▓████░█░█▒██░░░░\n" +
+                "█░░░░░░██ ██░██░  ░███ ▒█░ ███▓█▓░░▓█░█░ ░██░░ █\n" +
+                "█░███ ░██░██░░░░ ░░██▓█████░██▓█▓██ █████▒██░███\n" +
+                "█░░░▓░░██ ██░██░░█░██▓███▒▓███▓█▓▓███▒██ ░██░░░▓\n" +
+                "█░████░██ █▓░  ░ ░░██▓█░█▒░ ░█▓█▓█░▒█▓█▒▒▒██░░█ \n" +
+                "█░░██ ░██░█░░██ ▒█░██▓█░███░ █▓█▓████▒███▒██░ ░ \n" +
+                "█░████░██░  ░░▓░ ▒░██▓███▓░ ▓█▓█▓███░██ ░▒██░░  \n" +
+                "█░░▒█▓░██ ░▒░▒ ░░█░████ ██████▓█▓███▓▓█▓█▒██░░░ \n" +
+                "█░▓██░░██░░░░██░░░░██▓██░██ ▓█▓█▓██░█▒███▒██░▓█▓\n" +
+                "█░███░░██░██░██░██░██▓▓▓███░▒█▓█▓██░ ▒██ ▒██░██ \n" +
+                "█░░░██░██ ██░▓ ░██░██▓██████▒█▓█▓█▓░█ █▒░▒██░▓░█\n" +
+                "█░▒░█ ░██░░░░░░░░░░██▓░░░░░░░░▓█▓░░░░░░░▒▒██░▓▓█\n" +
+                "█░█░█░░█████▓████░▒▓▒▓▓▓▓▒▒▒▒▒▒▒▒▓██████████░▓░ \n" +
+                "█░█░▓███████▓███      ░      ░     ███████████▓▒\n" +
+                "█▓██████▓▓▓▓▓▓▓█████████████████████▓▓▓▓▓▓██████\n" +
+                "████▓▓▓▓▓▓▓▒▓▓▒▒█▓█▒▒▓▒▓▓▓▓▒▒▓▒▒█▓█▒▒▓▓▓▓▓▓▓▓▓▓█\n" +
+                "██▓▓▓▓▓▓▓▒▒▒▒▒░░█░█░░▓░░░░░░░░░░█░█░▒░░▓▒▓▓▓▓▓▓▓\n" +
+                "████▓▓▓▓▓▓▓▓▓▓▓▒███████████████████▒▓▓▒▓▓▒▓▓█▓██\n" +
+                "█▓▓▓▓▓▓▓▓▓▒▒░░░█████████████████████░░▒░▒▓▓▒▓█▓█\n" +
+                "████▓▓▓▓▓▓▒▓▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█▓▓█▓▓▓▓▓▓▓▓▓█▓\n" +
+                "███████▓▓█████▓███████▓█▓███▓█████▓█▓██▓█▓██▓███\n" +
+                "You find yourself in a dimly lit room.\n" +
+                "The walls are covered in ancient, glowing symbols.\n " +
+                "As you approach the center, a cold breeze blows from the east,\n " +
+                "and you hear faint whispers in the air.\n" +
+                "Do you dare 'inspect the room' further,\n " +
+                "or 'take the item' glowing faintly on the table?\n");
 
+        storiesStorage[1] = ("████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "██████▓▒████████████████████████████████▓█▒▓████\n" +
+                "██████▓██▒█▓████▓████▓██████▓█████████▓█▒██▓████\n" +
+                "█████▓▓████▓█▓████▓▓▓▓▓▓▓▓▓▓███▓████▓▓▓▓███▒▓███\n" +
+                "█████▓▓████▒██▓▓███████████████████▓██▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▓█████▓██▓█████▓█████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▓▓▓██▓█▓▓▓███▓██▓████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▒▓███▓░░░░░█▓▓██▓████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▒▒███▓░░▓░░█▒▒██▒████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▒▒███▓░██░░█▒▒██▒████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▒▒██▓▓░▓█░░▓▒▒██▒████░▓████▓███\n" +
+                "█████▓▓████▒██▒█▓▒▒█▒▒░██░██▒▒▓██▒████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒█▓▒▒▒▒███▒▒███▒▒▒▓▒████▒▓███▒▓███\n" +
+                "█████▓▓████▒██▒▓▒▒▒▒███▒▒▒▒███▒▒▒▒▓▓██▒▓███▒▓███\n" +
+                "█████▓▓████▒█▒▒▒▒▒█████▒▒▒▒▒████▒▒▒▒▒▒▒▓███▒▓███\n" +
+                "█████▓▒████▓▓▓▓▓▓█████▓▓▓▓▓▓█████▓▓▓▓▓▓████▒▓███\n" +
+                "█████▓▓██▒▒▒▒▒▒▒█████▓▒▒▒▒▒▒▓██████▒▒▒▒▒▒▒█▒▓███\n" +
+                "█████▓█▓▓▓▓▓▓▓███████▓▓▓▓▓▓▓▓▓██████▓██▓▓▓▓█████\n" +
+                "█████▓▓▓▓▓▓▓▓███████▓▓▓▓▓▓▓▓▓▓████████▓▓▓▓▓▓▓███\n" +
+                "███▓▓▓▓▓▓▓▓█████████▓▓▓▓▓▓▓▓▓▓██████████▓▓▓▓▓▓▓█\n" +
+                "████████▓██████████▓██████████▓██████████▓██████\n" +
+                "████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "The door creaks as you step into a long corridor,\n" +
+                " illuminated by flickering fluorescent lights.\n " +
+                "Suddenly, you hear a metallic scraping sound coming\n" +
+                "from the end of the hall. Before you can react,\n" +
+                "a figure steps out of the shadows, holding something sharp.\n" +
+                "Do you 'talk' to the figure, or 'run' back to the room?\n");
+
+        storiesStorage[2] = ("███████████▓███████████▒████████████████████████\n" +
+                "███████████▓███████████▒████████████████████████\n" +
+                "█████▒████▓░█████░█████░▓███████████████████████\n" +
+                "▓▓▓▓▓▓░▓▓▓▓ ▓▓▓▒░▓▓▓▓▓▓░█░█▓▓         ░████▓████\n" +
+                "▒░▓▓▓▓▓░▒▒▒▒▒▒▒░▒▓▓▓▓▒▓░█▓█▓▓▒ ░   ░  ▓███▓███░▒\n" +
+                "▓▓▓▒▒█▓▓▓▓▓▓▓▓▓▓▓▓▒▒░▒▒ ████▓▓▓▓▓▓▓▓▓▓▓██▓██░█░▓\n" +
+                "▓▓▓▒▓░░███▓  ░██░░▓▒▒▒▒░▓█▒████████████████▒█▒██\n" +
+                "░  █▓░██▓▓▓ ▒░▓██░▓▒  ░▒▒▒██▓▒░░░░░░▒██▓██░▒█▓██\n" +
+                "▒▒▒█▓░██▓▓▓ ▒ ▓██░▓▒▒▒▒ ▒░███▓▒▒▒▒▒▒████▓░░▒████\n" +
+                "▓▒▒█▓░█▓▓▒░ ░ ▒▓█░▓▒▒▒▒ █▓░████████████▓▒▒▓█████\n" +
+                "▒▒▒█▓░█▒░░░    ▒█▒█▒▒▒▒▒██▒█▓█░   ░█▒█░█▓███████\n" +
+                "▒▒▒█▓▒█▒░░░    ▒█▒█▒▒▒▒ ███▒█████████▒▓█████▓▓░▓\n" +
+                "▒▒ █▓▒▒▒▒▒░░░░▒▒▒▒▓▒ ▒▒ ▓███▓██▓▓▓██▓▓███▓█▓▒▒▒▒\n" +
+                "▒▒▒█▓▒██▓█▓▓▓▓▓███▓▒▒▒▒░▓▒██▓▒█▓▓██▓██▓▒▒▒█▒▓░▒▒\n" +
+                "▒▒▒█▓░░▒▓▓▓▓▓▓░░░░▓▒▒▒▒ ▒▒▒████▓░███▓▓▒▓▒▒█▒█░▒▒\n" +
+                "▒▒▒█▓░░█░░░░█░░░█░▓▒▒▒▒ ▓▒▒█▓█▓░████▓▓▒▓▒▒█▒░░▒▒\n" +
+                "▒▒▒█▓░███░███░░██░▓▒▒▒▒ ▓▒▒█▓█▓▓▒███░█▒▓▒▒█▓▒▒▒▒\n" +
+                "▒▒▒█▓▒▓████░█░░░░▒█▒▒▒▒ ░▓█▓██▓▓▒▓██▓▓▓▓▓▓░░▓▒▒▓\n" +
+                "▒▒▓████████████████▒▒▒▒ █▒▓██▒▒▒ ▒▒▒▓█▓▓▒▓███▓▓▓\n" +
+                "▓▓▓███████████████▒▒▒▒▒ ▓▒█▓▓▓▒▒▒▒▒▓▓▒▓▓▓▓█▓▓▓▒█\n" +
+                "▓▓▓███▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒ ▓▓▓▓▒▒▒▒░░▒▒▒▒▒▓▓██▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▒▓███▒░█░░▓▓▓▒▒▓ █▓▓▒▒▒▒▒ ░▒▒▒▒▓▓▓▓▓██▓▓▓\n" +
+                "▓▓▓▓▓▓▓░░░░░░░░░░▓▓▓▓▓▓ █▓▓▓▒▒▒▒░▒▒▒▒▓▓▒▓▓▓▓████\n" +
+                "█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░▓▓▓▓▓▓▓▒░▒▒▒▓▓▓▓▓▓▓▓▓███\n" +
+                "█████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░██▓▓▓▓▓▒░░▓▓▓▓▓▓▓▓██████\n" +
+                "██████████████▓████████░███▓▓▓▓▓▒▓▓▓▓▓▓█████████\n" +
+                "As you run down the corridor, you feel something\n " +
+                "snap under your foot. A loud alarm blares,\n " +
+                "and a red light fills the hallway. It’s a trap! The walls start closing in.\n" +
+                "You must 'defuse the trap' or 'fight' your way through the closing walls.");
+
+        storiesStorage[3] = ("░░░░░░░░░░░░░░░░░░░░░░░█░▒░░░▒▓▒░░░░░░▒░░░░▒\n" +
+                "░▓░░░░░░░░░█▓▒▓▒▒▒▒▒█▓▒▓▓▒░░░░▒░░░░░░░░░░░░░\n" +
+                "░░░░░░░░░░░█░░▓░░░░░█░░░░▒░░░░▒░░░░░░░░░░░░░\n" +
+                "░░░░░░░░░░██████████████▒▒░░░░▒░░░░░░░░░░░░░\n" +
+                "░░░░░░░░░░░█▓░▓░░░░░█▓░▒░▒░░░ █░░▒▒▒▒▒░░█░█▒\n" +
+                "░░░░░░░░░░█▓▓█▓█████▓▓▒█░▒░░░  █▒░  ░░░▒ ░█▒\n" +
+                "░▓░░░░░░░░░██░▓▓▒▒▓▓█▓▒▒▒▒▒░░  ▓     ░░░ ░█▒\n" +
+                "░░░░░░░░░░░█ ░▓░░░░░█ ░░░▒░░░  █    ░░░░ ▒█▒\n" +
+                "░░░░░░░░░░▓███████████▓▓▓▒░░░  █░░░ ░░░░ ▒█▒\n" +
+                "░░░░░░░░░░░█▓░▓░░░░░█▓░▒░▒░░░ ░ ░░░  ░░ ░▒█▒\n" +
+                "░▒░░░░░░░░▒▓▓▒▒▓▓▒▓▓▓▓▒█░▒░░░█░░░░░▒▒▒▒░░██▒\n" +
+                "░░░░░░░░░░░█▓░▓░░▒▒▒█▓░▒░▒░░░░░░▓▓▓▓▓▓▓▓▓▒▒░\n" +
+                "░░░░░░░░░░▓█ ▓███████░██░▒░░░░░░░░░▒░░░░░░░░\n" +
+                "░░░░░░░░░░░██░▓▒▒▒▒▓██░▓▓▓░░░░░░░░░░░░░░░░░░\n" +
+                "░░░░░░░░░░░█ ░▓░░░░░█░░░░▒░░░░░░░░░░░░░░░░░░\n" +
+                "░░░░░░░░░░█████████████▓▒▒░░░░░░░░░░░░░░░░░▒\n" +
+                "░░░░░░░░░░░█ ░▓░░░░░█░░▒░▒░░░░ ░░░░░░░░░█▓░▒\n" +
+                "░░░░░░░░░░▒▒▒▒▒▒▒▒▒▓▓▓▒█░▒░░░░░█▓▒▒▒▒▒▒▒░▓░░\n" +
+                "░░░░░░░░░░░█▓░▓░░░░░█▓░▒░▒░░░░░██▒▒▒▒▒▒▓░▓░▒\n" +
+                "░░░░░░░░░░ ▒░░▒▒▒▒▒▒▒░▒█░▒░░░░░█████████░▓░▒\n" +
+                "░░░░░░░░░░░█▓░▓▒▒▒▒▒█▓▒▒▒▒░░░░░▓░░░░░░░░░▓░▒\n" +
+                "░░░░░░░░░░▒█ ████████▓██░▒░░░░░█▓▒▒▒▒▒▒▒░▓░▒\n" +
+                "░░░░░░░░░░░██░▓▓▓▓▓▓█▓▓▒▒▒░░░░░██▓▓▓▒▒▒▒░▓░▒\n" +
+                "░░░░░░░░░░░█ ░▓░░░░░█░░▒░▒░░░░░█████████░▓░▒\n" +
+                "░▓░░░░░░░░▒▒▓▓▓▓▒▓▓▓▓▓▒█░▒░░░░░█░░░░░░░░░▓░▒\n" +
+                "░▒▒░░░░░░░░█▓▒▓▒░░▒▒█▓░▓░▒▒░░░▓▒▒▒▒▒▒▒▒▒▓█▒▒\n" +
+                "You climb up the rusty ladder, each step creaking under your\n" +
+                "weight. At the top, you push open a hatch\n " +
+                "and find yourself in a small, dark room filled with dust-covered monitors.\n " +
+                "Suddenly, the monitors flicker on, showing static and distorted faces whispering to you.\n" +
+                "Do you 'investigate the vent' near the floor, or 'climb the ladder' further?\n");
+
+        storiesStorage[4] = ("                                        ░   \n" +
+                "   █▒▓▒▒▓▒▒▒▒▒▒▒▒▒▓▒▒▒▓▓▓▓              ██  \n" +
+                "    ░███████████████████░▒   █            █ \n" +
+                "   ░ ▒█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█░▒    ▒███▓▓▓▓▓▓██▒▒\n" +
+                "   ░ ▒▓░ █████░░░████░▒█░▒    █▓░ ▓  ▓ ░██▒▒\n" +
+                "   ░ ▒▓░ ▒░░▒█░░▒ ░░█░▒█░▒    ██▒░█░ ▓░▒██▒▒\n" +
+                "   ░ ▒▓░ ▓▓▓▓█░░▒▓▓▓▓░▒█░▒    ▒██████████▓▒▒\n" +
+                "   ░░▒▓░░░░░░░░░░░░░░░▒█ ▒   ▒            ▓▒\n" +
+                "   ░░▒▓░ ▓▓▓▓█░░▓▓▓▓█░▒█ ▒      █▓█  ▒██▒ ▓▒\n" +
+                "   ░░▒▓░ ▒░░▒█░░▓ ░░█░▒█ ▒      █▒█  ███  ▒▒\n" +
+                "   ▒░▒▓░ ▒░░▒█░░▓ ░░█░▒█░▒                ▒▒\n" +
+                "   ▒░▒▓░ ▒░░▒█░░▓ ░░█░▒█░▒      ░▓█░░▒▒█░ ▒▒\n" +
+                "   ░░▒█ ░▒░░▒█░░▓ ░░█░▒█░▒      ▓▒█  ██   ▒▒\n" +
+                "   ░░▒▓▓█▓▓░░▓░░▓▒░░░░▒█░▒   ░            ▓▒\n" +
+                "   ░░▒▓░░░░█░░░░▒▒█░░▒▒█░▒    ████████████▒░\n" +
+                "   ░░▒▓▒░░░░▒▒▒▒▒▒░░░▒▒█░▒                  \n" +
+                "   ▒░▒▓▒ ▒░░▒█░░▓▒▒░█░▒█░▒                  \n" +
+                "   ░░▒▓▒░▒░░▒█░░▓ ░░█░▒█░▒        ▒░ █   ░█ \n" +
+                "   ▒▒▒▓▒░▒▒▒▒█▒▒▓░▒▒█▒▒█░▒      ░█▒░ ▓█░▓█░ \n" +
+                "   ░▒▒▓▒░▒▒▒▒█▒▒▓░▒▒█▒▒█░▒        ▒░ █░  ▓▒ \n" +
+                "   ░▒▒▓▒░▒▒▒▒█▒▒▒░▒▒█▒▒█░▒    ░ █ ▒░ █ █ ░▒ \n" +
+                "   ▒▒▓▓▒▓██▓▓▓▒▒▓▓█▓▓▒▒█▒▒    ▒░░▒█░ █░░░▒▒ \n" +
+                "   ░▒▓▓▒░░░░░░░░░░░░▒▓▓█░▒█                 \n" +
+                "                                            \n" +
+                "Behind the wall, you discover a narrow, winding staircase.\n " +
+                "As you descend, the air becomes colder,\n " +
+                "and you begin to hear the echoing sound of footsteps.\n " +
+                "You reach a door at the bottom, half-covered in moss.\n" +
+                "Do you 'open the secret passage' or 'drop the item' to check if it triggers a trap?\n");
+
+        storiesStorage[5] = ("████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████\n" +
+                "███ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓███▒▒█████████████████████\n" +
+                "███▒▒███████████░▓███▒▒▒▒░██████████████████\n" +
+                "███▒▒█ █▓░██▒██░█▒███▒▒▒█▒▒▒░████████████▓██\n" +
+                "██▓▒▒██   ░▒█  ░░████▒▒▒ ▒█▒▒           █▓██\n" +
+                "███▒░█▓█▒▒▓█▓██░█████▒▒ █▒█▓▒           ████\n" +
+                "███▒░█ ▒▒████░░░█████▒▒█▒▒▒▒▒           █▓██\n" +
+                "███▒▒▒█▓ ░    ███████▒▒▒ ▒██▒    ███    █▓█▓\n" +
+                "███░▓▓██ ███░▓██ ▒███▒▒▒ ▒█▒▒    ███    █▓██\n" +
+                "▒▒▒▒██▓▓ ███░▒██ ▒███▒▒▒ ▒█▒▒   █████   █▓██\n" +
+                "█░▓▓▒▒ ▓▒██▓░░██ ▒███▒▒▒ ▒█▒▒  ███████  █▓██\n" +
+                "████▓█▓▓ █ ▓████ ▒██▓▒▒▒ ▒█▒▒  ███████  █▓█▓\n" +
+                "███░░░▓▒░ ░█ ██▓░▒███▒  ▒▒▒▒▒  ███████  █▓█▓\n" +
+                "███░░█░░░░░░▒▒▒▒ ▒██▓▒█▒▒▒▒▒▒  ▒██████  █▓██\n" +
+                "███▒░███ ███░█▓█ ▒███▒▒▒ ▒█▒▒   █████   █▓█▓\n" +
+                "███▒░███ █ ▓░█▓█ ▒███▒▒▒ ▒█▒▒   ██ ██   █▓██\n" +
+                "█▓█░░█████ ▓▒███ ▒███▒▒▒ ▒█▒▒   ██ ░█   █▓██\n" +
+                "▓█▓▒░▒█▒█▓▓▓▓▒█▓▓▒███▒▒▒ ▒█▓▒   █   █   █▓█▓\n" +
+                "███▒░███ █▓█░█▓█ ▒███▒▒▒▓▒ ▒▒  ██  ██   █▓█▓\n" +
+                "▓▓▓▒░███ █░█░█▓█ ▒███▒▒▒▒▒▒▓  ██ ░██░    ▓█▓\n" +
+                "█▓▓▒▒███ ███░█▒█░▓███▒▒▒▓   ███████    ░░  ▒\n" +
+                "▓▓▓▒█▒▓▓▓▓▓▓▓▓▓▓▓████▓░   ░███████  ░░░░▒░░░\n" +
+                "████████████████████████████████████████████\n" +
+                "You enter a large, open chamber with flickering lights overhead.\n " +
+                "The ground beneath you is uneven,\n " +
+                "and you can hear the faint sound of water dripping somewhere in the distance.\n " +
+                "A large, ancient machine stands\n" +
+                "in the corner, humming softly.\n " +
+                "Suddenly, the ground shakes, and a figure appears in the doorway.\n" +
+                "Do you 'fight' the figure or 'hide'?\n");
+
+        storiesStorage[6] = ("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "██████████████▒▓▓▓▒▒▒▒▒▒▒▒▒▓▓▒▒███████████████\n" +
+                "█████████████▒▒▒▓▒▒▒▒▒▒▒▒▒▒▓▓▒▒███████████████\n" +
+                "█████████████▓█▒▒▒▒░░░░░░░▒▒▒▒▓▒██████████████\n" +
+                "████████████▒░░▓▓██████████▓▓░░▒███████████▒░░\n" +
+                "██████████▒░▒▓▓▓████████████▓▓▓░▒░█████████▒░█\n" +
+                "██████████▒▒█▓▓▓█████████████▓▓▓▒▒░████████▒░░\n" +
+                "█████████▒▒▓▓▓▓██████████████▓█▓▓▒▒████████▒░▒\n" +
+                "█████████▒▒▓▓▓▓▓████████████▓▓█▓▓▒▒████████▒▒▒\n" +
+                "█████████░▒▓▓▓▓▓▓███████████▓█▓▓▓▒▒████████▒▒▓\n" +
+                "█████████▒▒▓▓▓▓▓█▓▓██████▓▓██▓▓▓▓▒▒████████▒▒▒\n" +
+                "█████████▓▒▒█▓▓▓▓██████████▓▓▓▓▓▒▒░████████▒░░\n" +
+                "███████████░▒▒▓▓▓█▓▓▓██▓▓▓▓▓▓▓▒▒▒░█████████▒▒▒\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓░░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒░▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▒░░░░▒░░░░░░▓▓▒░░▒░░░▒░░░░▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓░▒▒▒▒▒▒▒▒▒▒░▓▓░▒▒▒▒▒▒▒▒▒▒░▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓░▒▒▒▒▒▒▒▒▒▒░▓▓░▒▒▒▒▒▒▒▒▒▒░▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓░░▒▒▒▒▒▒▒▒░░▓▓░░▒▒▒▒▒▒▒▒▒░▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓░▒▒▒░▒▒░▒▒▒▒▒▓▓▒█▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "As you investigate the vent, you find a passageway\n" +
+                "leading to a hidden room. Inside, you discover\n " +
+                "a strange device emitting a soft blue light.\n " +
+                "Before you can examine it, the door behind you slams shut,\n " +
+                "and the walls begin closing in.\n" +
+                "Do you 'talk' to the voice you hear whispering through the walls,\n " +
+                "or 'use the item' to stop the mechanism?\n");
+
+        storiesStorage[7] = ("█████████▓███████▓█▒░░░  ░░░▒█▓▓▓███▒███████████\n" +
+                "████▓▒▒▒████████▒▓▓▒░░░  ░░░▒▓▓▓▒▓██████▓███████\n" +
+                "▓███▓▓████████▓█▓▓▓▒░░░  ░░░▒▒▓▓▒███▓█████▓██▓██\n" +
+                "█▓▓█▓▒███████▒██▓▓▓▒░░░  ░░░▒▒▓▓▒███▒█████▒▓█▓██\n" +
+                "█▓▓█▓▒███████▒██▓▓▓▒░░░  ░░░▒▒▓▓▒███▒█████▒▓▓▒██\n" +
+                "█▓▒█▓ ███████▒█▓▓▓▓▒▒░░  ░░▒▒▒▓▓▒███▒█▓█▓█░▓▓▓▓█\n" +
+                "█▓▓▓▓░█▓█▓█████▓▓▓▓▒▒░░ ░░▒▒▒▒▓▓▒█████▓█▓▓░▓▓▓▓█\n" +
+                "█▓▓█▒ ███▓██████▓▓▓▒▒░░░░░▒▒▒▓▓▓▓█████▒█▓▓░▒▒▓▓█\n" +
+                "█▓▓▓▒ █▓█▓██████▓▓▓▒▒░░░░░▒▒▒▓▓▓▓█████▒█▓▓░▓▒█▓█\n" +
+                "█▓▓▓▒ █▓█▒█████▓▓▓▓▒▒▒░░▒▒▒▒▒▒▓▓▓█████▒█▓▓█▓▓▓▓▓\n" +
+                "█▓▓▓▒██▓█▒██████▓▓▓▒▒░▒ ░▒▒▒▒▓░▓▓█████▒█▓██▓▒▓▓▓\n" +
+                "▓▓▓▓▒░█▓█▒██████▓▓▓▒▒▒░  ▒▒▒▒▓▓▓▓█████▒█▓▓░▓▒▓▓▓\n" +
+                "█▓▓▓███▓█▒██████▓▓▓▒▒▒░░░░▒▒▒▓▓▓▓█████▒█▓▓███▓▓█\n" +
+                "█▓▓▓▒░▓▓█▒█████▓▓▓▓▒▒▒▒░░▒▒▒▒▓▓▓▓█████▒█▓▓░▓▒▓▓█\n" +
+                "█▓▓▓▓ █▓█▒█████▓▓▓▓▒▒▒ ░  ▒▒▒▓▓▓▓█████▒█▓▓ ▓▒▓▓▓\n" +
+                "█▓▓▓▒░▓▓█▒████▓▓▓▓▓▒▒▒█▒▒▓▒▒▒▓▓▓▓█████▓█▓▓░▓▒▓▓▓\n" +
+                "█▓▓▓▓░▓▓█▓█████▓▓▓▓░  ▓▓▓▓   ▓▓▓▓█████▓█▓▓ ▓▒▓▓▓\n" +
+                "█▓▓▓▓░▓▓▒░▒██▓▓▓▒              ▓▓▓▓██▓░▒▓▓░▓▒█▓█\n" +
+                "█▓▓▓▓ ██▓▓▓▓▒▒▒ ████▓▓▓▓▓▓▓▓▓▓█▒ ▒▒▒▒▓▓▓▓▓ ▓▒▓▓█\n" +
+                "█████▒ ▒▒░▒░░░░▒░░▒░ ░    ░░░▒░░░░░░░▒░░▒ ▓█████\n" +
+                "████▓█ ▒▒▒▒░░░░░ ░  ░  ██  ░  ░ ░░░░▒▒▒▒▒ ▓▓▓███\n" +
+                "██▓▓▓▓▒▓▓▓▒▓▒▒▒▒▒▒▒▒▒▒▒██▓░░▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓▓██\n" +
+                "▓▓▓▒▒▒▒▒░▒▒▒▒▒▒░▒░▒▒░░ ██ ░░░░░░▒▒▒▒▒▒▒░▒▒▓▒▒▓▓▓\n" +
+                "▓▓▓▓▓▓░▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░███▒▒▒▒▒▒▓▓▓▓▓▓▓▓▓░▓▓▓▓▓█\n" +
+                "████████▓▒▓▓▓▓▓▓▓▓░▓▓▓▓██▓▓▓▓▒▓▓▓▓▓▓▓▓▓█████████\n" +
+                "████████▓████░██████████████████████████████████\n" +
+                "The passage leads you to an underground chamber filled with ancient artifacts.\n " +
+                "The air is thick with dust,\n " +
+                "and the walls are covered in strange inscriptions.\n " +
+                "As you examine the room, you notice a faint glowing symbol\n " +
+                "on the far wall, pulsing with a rhythmic glow.\n " +
+                "Just as you approach, a figure steps out from behind the shadows.\n" +
+                "Do you 'talk' to the figure or 'hide' behind the nearest artifact?\n");
+
+        storiesStorage[8] = ("█████████████▓█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▓▓▓▓█▓███████████\n" +
+                "█████████████▓█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▓▓▓▓█▓███████████\n" +
+                "█████████████▓█▓▓▓▓▓▒▒▒▒▒▒▒▓▒▓▓▓▓█▓███████████\n" +
+                "█████████████▓█▓▓▓░▓▓▓▓▓▓▓▓▓▓▓ ▓▓█▓███████████\n" +
+                "█████████████▓█▓▓▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓███████████\n" +
+                "█████████████▓▓▓ ▓▓▓▓▓  ▒▒░▓▓▓▓ ▓█▓███████████\n" +
+                "█████████████▓▓▓▓▓▓▓▓░  ▒▒▒ ▓▓▓ ▓▓▓███████████\n" +
+                "██████████▓██▓▓▓▓▓▓ ░░▒ ░░ ▒ ▓▓▓▓▓▓███████████\n" +
+                "█████████████▓░▓▓▓▓ ░      ▓░▓▓▓▓▓▓███████████\n" +
+                "█▓██▓████████▓▓▓▓▓█░░      ▒▒█▓▓▓▓▓████▓██▓███\n" +
+                "█████████████▓▓▓▓▓█░░      ▓▓█▓▓▓▓▓███████████\n" +
+                "██▓███▓██████▓▓   ▓ ░▒░  ░ ▒ ▓▓▓▓▓▓███████▓███\n" +
+                "▓▓█▓█▓▓█▓▓▓▓▓▒░▓▓▓▓█░░░▒▒▒▒ █▓▓ ▓▓▒▓▓▓▓▓▓██▓▓█\n" +
+                "█▓▓▓█▓▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▒░░▒░█▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓█▓▓▓▓▓▓▒▓▒▓▓▓▓▒▒████▒▒▓▓▓▓▒▓▒▓▓▓▓▓▓▓▓███\n" +
+                "▓▓▓▓▒▓▓▓▓▓▓█▓▒█ ░▒░░▒▒██████░ ░▒ ▓▒█▒▓▓▓▓▓▓▓█▓\n" +
+                "▓▓▓▓▓▓▓▓▒▓▓▓▓░▒░  ░█ ▒████▒ █░  ░▒ ▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓█▒▓▓▓▒▒▒▒ █▓  ▒ ░▒█▓███▓█░ ▒░ ▒█▓▒▒▓▓▓▓▓▓█▓\n" +
+                "▓▓▓▓▓▒▒▒▒░░█ ██▒▓▓▓░        ░▓██▓██ ▓░▒▒▒▒▒▓▓▓\n" +
+                "▓▓▓▓▒▒▒▒▒█ ██ ▓█████▒▓▓▓▓▓▓▒█████▒ █▒░▓▒▒▒▒▒▒▓\n" +
+                "▓▒▓▓▒▒▒▒░██░▓███  ░▒▒▒▓▓▓▓▓▒▒▒▓ ███▒░██░▒▒▒▒▓▓\n" +
+                "▓▓▓▓▒▒▒▒▒░▓██▓ ▒▒████▓▓▓▓██████▒▒ ▓██▓░▒▒▒▒▒▓▓\n" +
+                "▓▓▓▓▓░▒▒▒▒░ ▓██▓█████▓░░░░▒▒▒██████▒░▒▒▒▒▒█▓▓▓\n" +
+                "███▓▓▓▓▓▓▓░▒▒▒▒▒  ░ ░▒█▓▓▓▒░▒░░ ▒▒▒▒▒▒▓▓▓▓▓▓▓█\n" +
+                "█████▓█▓▓▓▓▓▓▓▒▒▒▓▒▒▒▒▒▒▒▒▒▒▒▒▒▓▒▓▓▓██▓▓▓▓████\n" +
+                "You take the item from the pedestal, and the room suddenly shifts.\n " +
+                "The walls begin to move, and the ground\n " +
+                "underneath you starts to tremble. It's a trap! In the distance, you hear a door slam shut.\n" +
+                "Do you 'run' toward the door or 'fight' to find another way out?\n");
+
+        storiesStorage[9] = ("████████████████████▓▓▓██▓████████▓█████▓███▓█\n" +
+                "███████████████████████▓█████████████████▓████\n" +
+                "████████████████████████▓▓███████▓▓████▓█▓██▓█\n" +
+                "██████████████████████████▓▓███▓█▓█▓█▓█▓█▓▓▓█▓\n" +
+                "██████████████████████████▓▓▓▒▓▓▓▓█▓██▓█▓█▓▓▓█\n" +
+                "█████████████████████▓█▓▓▓▒▓░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "██████████████████████████░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓\n" +
+                "██████████████████▓████▓▓▒▒ ▓▓▓▓▓▓▓▓███▓▓▓▓▓▓▓\n" +
+                "███████████████████████▓█░▒▓▓▓▓▓▓▓▓▓▓█▒▓▓▓▓▓▓▓\n" +
+                "████████████████████████▒ ▒▓▓▓▓▓▒▓▒░███▓▒▒▒▒▓▓\n" +
+                "█████████████████████░▓█░▓▓▓▓▒▒▒▒▒▒░██▓█▒▒▓▒▒▒\n" +
+                "████████████████████ ▓██░▓▓▓▓▒▒▒▒▒█▓▓▒█▓░█▒▒▓▒\n" +
+                "████████████████████████▓▓▒▒▓▒▒░▓▓▓░░▓░░▒▓▓░▒▒\n" +
+                "███▓█████████████████████ ▒▒▒▒▓▓▓░▓  ▒  ░▒▓▓▒▒\n" +
+                "█████▓▓██████████████▓▒▓▓▒▒▒▒▒▒▓░░   ░   ░░▓▓░\n" +
+                "██████▓▓████████████▒▒▒▒▒▒▒▒░▓█▒▓▒▒▒ ░ ░▒▒▒▓▓▓\n" +
+                "████████▒▒█████████ ▓▓▓▓▒▓▓▒▒▒░▓░░ ░ ░ ▒  ░▓ ▓\n" +
+                "███▓▓█████▓▓██████▓ ▓▓▓▒▓▒▒▒█ ░▓▓▒░░ ▓ ░░░▓ ██\n" +
+                "█████▓▓▓▓▒██░▓▓▓▓▓░▓▓▓▓▓▒▓▓▒██░▒██▓▓░▓░▒▓▓░▓█░\n" +
+                "████████▒▒▓███▓▓▓▓▓▓▓▓▓▓▓▒░▓██▓░▒███▓▒█▓▓░███▒\n" +
+                "████▓▓▓▓▓▓██▒██░▓▓▓▓▓▓▓▓▓▓▓▓▓██▓ ▒████ ░████▒▒\n" +
+                "█████▓██▓▒▒▒██░█▒▓▓▓▓▓▓▓▓▓▓▓▓█████▒▓▓▓█████▓▒▓\n" +
+                "████▓██████▓▒░███░▓▓▓▓▓▓▓▓▓▓▓█████████████▓▓▓▓\n" +
+                "██████▓▓█████▒░██░█▓▓▓▓▓▓▓▓▓▓█████████████▓▓▓▓\n" +
+                "███████████████░██░▓▓▓▓▓▓▓▓▓▓███████████▓▓▓▓▓▓\n" +
+                "The figure in front of you holds a strange mechanical device.\n " +
+                "He points it at you and says, 'You shouldn't\n " +
+                "have come here. Now you will face the consequences.'\n " +
+                "The device begins to glow brightly, and you feel a strange\n " +
+                "force pulling you toward it.\n" +
+                "Do you 'fight' back or 'talk' to the figure in an attempt to negotiate?\n");
+
+        storiesStorage[10] = ("████████████▓█████████████████████████████████\n" +
+                "████████████▓███████████████▓█████████████████\n" +
+                "████████████▓███████████████▓█▓███████████████\n" +
+                "████████████▓██████░███▒▒███░█ ███████████████\n" +
+                "████████████ ██████░██████▓▒▒█░█▓█████████████\n" +
+                "████████████ █▓████ ▒ ░ ▓▓█░░█░░██████████████\n" +
+                "████████████ █▓   ░▓░░▒▓ ░█▓░  ░██████████████\n" +
+                "█████████▓██ █    ▓░ █▒░▓▓▓ ░▒  ▓█░██▓████████\n" +
+                "████████████ █ ███ ████   ▓██ █▓  ▒███████████\n" +
+                "██████████▓██ ▓ ██ ░██ █░█ ▒█ █  ▓▒███████████\n" +
+                "████████████ ░██ ░ ▓█▓ ░ ░ ██ ▓██▓▒█▒█████████\n" +
+                "████████████     █ █ █ ░▒███ ██  ▓▒███████████\n" +
+                "██████████▓█  ▓█▒█░█ █▒    █ ▓ ███▒███████████\n" +
+                "████████████ ██ ██ █▒█░▓▓████ █  ▓▒███████████\n" +
+                "████████████  ████ ▒██ █   ▓█ ██▓▓▒███████████\n" +
+                "██████████████▒  █ ████▓░▓███   ██████████████\n" +
+                "█████████████▓█████▓       ░██▒███████████████\n" +
+                "██████████████████ █ ░░▒░  ░ █████████████████\n" +
+                "█████████████████ ██▓███▓████░████████████████\n" +
+                "████▓▓▓█▓▓▒▒▓▓░ ███████░▓██▓███░░▒█▒▓▓▓▓██████\n" +
+                "█▓▓▓▓▒▒░░    ▒███░█▓ ██▒▒████▒███░   ░░▒▒▓▒▓▓▓\n" +
+                "███▓▓█▓▓▓▓▓▓█▓▒░▒     ██▓█    ▒▒░▒▓▓░▓▓██▒████\n" +
+                "███████████▒██▓▓░▓▓▓▒▓█▓▓█▓█▓▓▓██░▓██▒████▓███\n" +
+                "████████████████████▓████▓████████████████████\n" +
+                "██████████████████████████████████████████████" +
+                "The machine begins to hum louder as you approach.\n " +
+                "Strange symbols flash across the screen, and\n " +
+                "the ground beneath you trembles. Suddenly, you feel a sharp pain in your chest,\n " +
+                "and the room spins violently.\n" +
+                "Do you 'use the item' to stabilize the machine, or 'run' before it's too late?\n");
+
+        storiesStorage[11] = ("███████████████████████████▓██████████████████\n" +
+                "██████▓▓▒▒█▓▒▒▓▓████████████████▓█▓█▒▓▒▓▓█████\n" +
+                "████▓█▓▓▓█████▓█▓████████████▓█▓█▓█████▓▓▓▓▓██\n" +
+                "██▓▓▓▓▓▓███████▓██▓▓███████▓▓▓▓▓████████▓▓▓▓▒▒\n" +
+                "▓▓█▓▓▓██████████▓▓▓█▓█████▓▓▓▓▓▓█▓████████▓▓▓█\n" +
+                "▓▓▓▓▒███████▓▓▓▓█▓▒▓██████▓▓▓▒▓▓▓▓▓▓████████▓▓\n" +
+                "▒█▒▓█████▓▓▓▓▓▓▓▓▒░▒▓████▓▓▒▒▒▒▒▓▓▓▓▓▓▓████▒▓▒\n" +
+                "▒█▒▒█████▓▓▓▓▓▓▓▓▒▒▓▓████▓▓▒▒▒▒▓▓▓▓▓▓▓▓█▓██▒▓▒\n" +
+                "█████████▓▒▒▓▓▓▓▓▒▒▓▓▓███▓▓▒▒▓░▒▓▓▓▓▒▒▓▓▓██▒██\n" +
+                "▒█▒██████▓▓▒▒▓▓▓▓▒▒▓▓████▓▓▒▒▓▒▓▒▓▒▒▒▓▓█▓██▒▓▒\n" +
+                "▒█▒▒████▓▓▓░░░░▓▒▒█▓▓████▓█▓▓▓▒▒▓░░░▒▓▓▓███▒▒▒\n" +
+                "▒█▒▒████▓▓▓▓░░░░▓█░██████▓█▓▓▓█░░░░░▓▓▓▓███▒▒▒\n" +
+                "▒█▒▒███▓▓▓▓▓░░░░░░▓██████▓▓▒█▒░░░░░▓▓▓▓▓▓▓█▒▒█\n" +
+                "▒█▒▒█▓▓▓▓▓█▓▓░░░░░░░███████▓░░░░░░▒▓▓▓▓▓▓██▒▒▒\n" +
+                "▒█▓▒██▓█▓▓▓█▓▒░░░░░░░░███▓░░░░░░░░▓▓▓▓▓▓▓█▓▒▒█\n" +
+                "▒██▓▒█▓▓▓▓▓▓▓▓░░░░░░░▓█████░░░░░░░▓▓█▓▓▓▓▓█▒▒▒\n" +
+                "██▓▓█▓▓▓▓▓▓▓▓▓▓░░░░░░██████░░░░░░▓▓▓▓▓█▓▓▓▓█▒▒\n" +
+                "▒▓▓█▓▓▓▓▓▓▓▓▓▓▓░░░░░░░████░░░░░░▒▓▓▓▓▓▓█▓▓▓▓█▓\n" +
+                "▓██▓▓▓▓█▓▓▓▓▓▓▓▒░░░░░░████░░░░░░▓▓▓█▓▓▓▓▓▓▓▓██\n" +
+                "███▓▓▓▓▓▓▓▓▓▓▒▓▒▒░░░░░█░░█░░░░░▒█▓▓▓█▓▓▓▓█▓▓▓█\n" +
+                "███████████████▓▒▒░░░░█░░█░░░▒░▒██████████████\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▒▒▒▒▒░░█░░█░░▒▒░▒▒▓▓▓▓▓█▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒█░██▒▒▒▒▒▒▒█▓▓▓▓▓▓▓▓█▓▓▓\n" +
+                "██████████████▒▒▒▒▒▒▒██████▒▒▒▒▒▒▒████████████\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒███████▓▒▒▒▒▒▒▓▓▓█▓▓▓▓▓▓█▓\n" +
+                "As you run down the hallway, the sound of\n " +
+                "footsteps echoes behind you. The figure is chasing you,\n " +
+                "and the walls seem to close in as you sprint forward. Up ahead, you see a door, slightly ajar.\n" +
+                "Do you 'hide' behind the door or 'keep running'?\n");
+
+        storiesStorage[12] = ("██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "█▓▓▓▓█▓▓▓▓▒▓▒▒▒▒▒█▒▒▒▒▒▒░▒▒▒▒▒█▒▒▒▒▒▒▓▓▓▓▓▓█▓▓\n" +
+                "█▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓█▓▓▓▓\n" +
+                "█▒▒█▓▒▒▒▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒▒▒▒▓▒▒▒▒▓▒▒▒▒▓▒▒▒▓▓▓\n" +
+                "█▒▒▒▒▓▒▒▒▒▓▒▒▒▒▒▒▒▒▓▒▒▒▒▒▒▒▒▒▒▒▒▒▓▒▒▒▒▒▒▒▒▓▓█▒\n" +
+                "█▒▒▒▒▓▒█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▒█▒\n" +
+                "█▒▒▒▒▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▒░ ░░░▓▓▓▓▓▓▓▓▓▓▓▓▓█▒▒▒█▒\n" +
+                "█▒▒▒▒▓▒▒▓█▓▓▓▓▓▓▓▓░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▒▒▒█▒\n" +
+                "█▒▒░▒▒▒▒▓▓▓▓▓▓▓▒░ ░░░░░░░░░░░░░ ▒▓▓▓▓▓▓██▒▒▒█▒\n" +
+                "█▒▒░▒▒▒▒▓▓▓▓▓▓▓░░░░░ ░░ ░░░░░░░░░▓▓▓▓▓▓▓▓▒▒▒█▒\n" +
+                "█░░░▒▒▒▒▓█▓▓▓▓▒░░░░░░  ░░  ░░░░░░ ▓▓▓▓▓▓▓▒▒▒█░\n" +
+                "█░░▓▓▓▒▓█▓▓▓▓▓ ░░░░░ ░  ░ ░ ░░░░░ ▓▓▓▓▓██▒▓▓█▒\n" +
+                "█░▒░▒▒▒▒▓▓▓▓▓▓ ░░░░░ ░    ░  ░░░░ ▓▓▓▓▓▓▓▒▒▒▓░\n" +
+                "█░▒░▒▒▒▒▓▓▓░▓▓▒░░░░ ░  ░░  ░░░░░░ ▓▓▓▓▓▓▓▒▒▒█▒\n" +
+                "█▒▒░▒▒▒▒▓█▓▓▓▓▓░░░░░░░░░░░░░░░░░ ▓▓▓▓▓▓▓█▒▒▒█▒\n" +
+                "█▒▒█▒▒▒▒▓▓▓▓▓▓▓▓▒ ░░░░░░░░░░░░ ░▓▓▒▓▓▓▓▓█▒▒░█▒\n" +
+                "█▒▒▒▒▒▒▒▓█▓▓▓▓▓▓▓▓▒ ░░░░░░░░ ░▓▓▓▓░▓▓▓▓▓█▒▒▒█▒\n" +
+                "█▒▒▒▒▒▒▓▓▓▓▓▒▒▒▒▒▒▒▒▒░░░░░▒▒▒▒▒▒▒▒▒▒▓▓▓▓█▒▒▒█▒\n" +
+                "█▒▒▒▒█▒▒▒▒▒▒▒░░   ▓▓▓█▓▓███▓▓▓▓  ░▒▓▒▒▒▒▒▒█▒█▒\n" +
+                "█▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░ ░░▒░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█\n" +
+                "█▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒░▒▒▒░░▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓▓█▓\n" +
+                "█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▓▓▒▒▒░▒▒▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓\n" +
+                "███████████████▓▓▓█▓▓▓▓▒░▓▓▓▓▓█▓▓▓████▓███████\n" +
+                "You step through the door and find yourself in a room\n" +
+                "filled with broken machinery and scattered tools.\n " +
+                "In the corner, a strange orb pulses with energy,\n " +
+                "casting eerie shadows on the walls.\n " +
+                "Suddenly, you hear a noise behind you.\nDo you 'take the item' or 'investigate the noise'?\n");
+
+        storiesStorage[13] = ("██████████████████████████████████████████████\n" +
+                "███████████████████▓██████████████████▓███████\n" +
+                "███████████████▒██████████████████████████████\n" +
+                "███████████████████████▓▓▓██ ░▓███░▒░▒████████\n" +
+                "█████████▓███████▓█▓▓▓▓▒ █▒█▒▒▓█▒▒▓██▓██▒▓████\n" +
+                "█████████▓█████▓▓▓▓█▒▒██▒░▓░▒▒█▒▒▒▓▒▒▓▓████▒██\n" +
+                "████████████████▒▒▒▓█▒▒█░░█░░▒░░▒█▒▒▒▓█▓▓████▒\n" +
+                "████████████▓▓▓▓██▓░▓░░▓█░████▓▓█▒░▒▓▒▓▓▓██▒██\n" +
+                "███████████▓██▒▒░░█▒░████████████▓▒█░▒▒▓▓█▓███\n" +
+                "█▓▓███████▓▓▓▒▒██▒░████████████████░▓▒█▒▒▓▓███\n" +
+                "██████████▓▓██▒▓▒▓██████████████████▓▒▒▒▓▓█▒██\n" +
+                "██▓▒█████▓▓▒▒▒▒█████████▓██▓█████████░██████▓█\n" +
+                "██▓████████▓████▒█████▓███▓▓▓████████░█▒▒▓▓███\n" +
+                "███▒██████▓▒▒▒░█▒████████▓████▓▓▓█████████████\n" +
+                "██▓▓▒███████▓▒▒▒▓████████▓█▒█▓▓██████░█▒▓▓▓███\n" +
+                "████▓░█████▓▓██▓▒█████████▒██▓███████▒█▓▓▓████\n" +
+                "████▓▒░███████▓▒█▓▒░██▒███▓█▓██████░░▒▒▓▓█▒▒██\n" +
+                "█████▒█░▒████████▓▓█▓█▓▓███████████░▓█▒▓▓█████\n" +
+                "█▒▓████▓░▒██████████████████████████▒▒▓█▓█████\n" +
+                "████▓▓▓▓█▒░░███████████████████░░█░█░▓▓███████\n" +
+                "██████▒███▒▒█▓░░████████████░░▒▓█▒▒▓██▓██████▓\n" +
+                "███▒█████▓▓███▒▒██░░ ▒░░██▓░█▒▒▓▓█▓▓▓█████████\n" +
+                "██████████░█▓▓▓▓░█▒▒██▒▒█▒░░▓█▒▒▓▓████████████\n" +
+                "████████▒███▓▓█▓█▒▓▓█▓▒▒▓▒▓▓▒██▓▓█████████████\n" +
+                "██████▒██████▓███▓▓█▓▓▓▓██▓▓▓▓████████████████\n" +
+                "You open the secret passage, and a staircase\n " +
+                "spirals downward into darkness. As you descend,\n " +
+                "the air becomes damp and cold. At the bottom, you see a dim\n " +
+                "light flickering from a narrow passage ahead.\n " +
+                "The smell of decay fills your nostrils.\nDo you 'enter the passage' or 'go back up'?\n");
+
+        storiesStorage[14] = ("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓█▓▓▓▓▓█▓▓▓▓▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒░░▒▒▒▒▓▓▓▓▓▓▓█▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓█▓██▓▒▒▒▒░░ ░ ░░░▒░▒▒▓▓▓▓▓▓▓█▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒▓░▓░           ▒▒▒▓▓▒▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░ ▓▓▓▓▓▓▓▓█▒▒ ░▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒░▓ ▓▓▓▓▓▓▒▒▒▓▒▒ ▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▒▒▒░ ▓▓▓▓▓▓▓▓▓█▓▒ ░▒▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓█▓▓▓▓▓█▓▓▓▓▓▒  ▓▓▓▓▓▓▓▒█▓▒ ░▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓█▓▓▓▒▒░  ▓▓▓▓▓▒▓█▓█▒ ░▓▓▓▓█▓▓▓▓█▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒▓▒  ▓▓▓▓▓▓▓▓█▒▒ ▒▒▓▒▓▒▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓█▓▒▒░  ▓▓▓▓▓▓▒▒█▒▒ ░▒▓▓▓▒▓▓▓█▓▓▓▓▓▓▓\n" +
+                "▓▓█▓▓▓▓▓▓▓▓▓░▓▓ ▓██████████▒  ▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░ ▓▓▓▓▒▒▒▒█▒▒ ░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓█░█▓▓▒▒░▒          ░▒▒▓█ ▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▒░▓▓▓▓░░░░▒   ░▒▒▒░▒▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▓▓▒▒▒▓▒▓▓▓▓▓▓▓▓▓█▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▓▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "As you approach the flickering light, you hear a soft,\n " +
+                "rhythmic tapping coming from the other side of the wall.\n " +
+                "The closer you get, the more intense the tapping becomes,\n " +
+                "as if something is trying to communicate with you.\n" +
+                "Do you 'tap back' on the wall or 'open the hidden door' you see in the corner?\n");
+
+        storiesStorage[15] = ("██████████████████████████████████████████████\n" +
+                "██▓▓█████████████████▓▓█▓▓████▓▓███▓█████████▓\n" +
+                "▓▓▒▓▒▓▓▓▒▓▒▒▒▒▓▒▒▒▒▒▒▒▒▓▒▒▒▓▒▒▒▒▒▒▓▒▒▒▒▒▒▒▒▒▒▓\n" +
+                "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\n" +
+                "▒░▒▓▒▒▒▒▒▒▒▒▒▒▓░░▒▒▓░▒▒▒░▒░▓▒▒▒▒░▒▒▒▒░▒▒▒▒▒░▒▒\n" +
+                "██▓███████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▓\n" +
+                "█████████████████████████████▓██████▓██▓▓▓█▓▓▓\n" +
+                "████████████████████████▓████████████▓███▓████\n" +
+                "███████████████████████████████████████▓█▓█▓▓█\n" +
+                "████████████████████████████████████▓██▓█▓████\n" +
+                "████████████████████████████████████▓█████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "░░░░█▓████████████████████████████████████████\n" +
+                "▓░░░░░▓░░░▓░░▓████████████████████████████████\n" +
+                "░▓█▒▓▒░▒▒▒░░░░█▓██████████████████████████████\n" +
+                "▓▓▓▓░░░░▒▒░████░██████████████████████████████\n" +
+                "█▓▒▒░░░▓█████▓█▒██████████████████████████████\n" +
+                "▒▒░░░▓█▓███████▓██████████████████████████████\n" +
+                "██▓█████▓██▓██████████████████████████████████\n" +
+                "██▓█▓███▓█████▓░██████████████████████████████\n" +
+                "██▓█████▓██████▓██████████████████████████████\n" +
+                "██▓▓████▓█▓███████████████████████████████████\n" +
+                "███████▓███████▒██████████████████████████████" +
+                "You tap back on the wall, and suddenly the sound stops.\n " +
+                "A deep silence fills the room, and the light\n " +
+                "flickers out completely. Before you can react,\n " +
+                "the floor gives way beneath you, and you begin to fall into darkness.\n" +
+                "Do you 'grab onto the ledge' or 'brace for impact'?\n");
+
+        storiesStorage[16] = ("████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "████████████████████████████████████████████░░██\n" +
+                "██████████████████████████████████████████░░▒▒██\n" +
+                "██████████████████▒░░░░░░██████░▒████████▓▒▒░░██\n" +
+                "█████████████▓██▒░█ ▒▒░░░░░ █░ ▒▓▒▒██▓░░░██░▒░██\n" +
+                "████████████▓▒▒░░░░░██▓▓▒▓▒▓░█░█▒░▓▒░▒░░▒░▒░░▒██\n" +
+                "████████████▓▓█▓▓▒░░░ ░░▓▓▓█▒█░░ ░▓▒░▒▒░░░▒▒▓▒██\n" +
+                "██████████░░▒░░▓██▓▒░▒▒▒▒▓▓▓▒▒█▓▒▒█▒░▒░░▒░▒ █░██\n" +
+                "██████████▓█▒▒ ░░░░░█▓▓▓▓█░█▓▒▓████▒░▒▒▒▒ █░▒░██\n" +
+                "██████████░░█▓▒▒░░░▒░▒▒█▓▒▒ ██▒▓███▒▒▒██▒▒▒▒▒▒██\n" +
+                "████████░  ░▒░▒██▓▓█▒▒▒▒▒▓▓▓ █▒▓██▒░▒▒░▒░░▒▒▒▒██\n" +
+                "████████▓▓▒▒▓▒ ░ ▒▒██▓▒▒░░█▓█▓▒▒▒▒██▓░▓▒▓▒▓▒▒░██\n" +
+                "████████▓▓▓▓▓▓▒▓█▓░░▒█▓▓▓▒░█▓▒░█▒▒▒▒██░▒▒▒░░▓▓██\n" +
+                "████████▓▒██████▓▓█▒░░▓█▓█▓▒███▒░▒▒▒▓▒██▓░▓▒▒▓██\n" +
+                "██████████░░▒▒▓███▓▓▓▓▓██▓▒▒██▒▒▓▓███████▓▓▒▓▓██\n" +
+                "████████▒░▒░░▒▒▒▓████▓▓▒████▓█▒░▒▒▒▒░▒░░▒█▓▓▒███\n" +
+                "█████░░░▓░███░▒▒░▒▒▓████▓▒▒▒▒▓░░▒▒▒░▓█▓▓█▓██▓███\n" +
+                "███░▒▓░░▒░▒░▒▓██░▒▒▒▒▒▒▓▒▒▒░▒▒█░▒▒▒░██▒▓█▓██▓▓██\n" +
+                "██░░▒▒█▒▒▒▓░▒░▒▒▒▒█░▒▒▓▒▒▒▒░▒░▓░██▓▓█▓▓▓▓▓▓█████\n" +
+                "██░▒▒▒░▓█▒▓▒▒▒░▒▒▒▒▒▒██▒▒▒▒▓░░░▓▓▓█▓█▓▓█▓████▓██\n" +
+                "██░▒▒▒▒▓▓██▒▒░░▒░▒▒▒▓███░░▓░█▓▓▒▓██▒█▓█▓▒▓██████\n" +
+                "████░█░▒░░▒██▒▒▓▒▒█▒░▒▒▓██░█▒██▓▓▓████▓▓█▓██████\n" +
+                "██▒▒▓░▒░▒▒░▒██▒███▒░▓░░▓▒▓██▓██████▓██▒█████████\n" +
+                "██▒▒▒▒▒▒█▓▒▓▒▓█▒▒▒▒░░▓▓▓█▓▓██▒██████████████████\n" +
+                "████████████████████████████████████████████████\n" +
+                "As you fall, you manage to grab onto a ledge just in time.\n" +
+                "Below, you see a deep chasm,\n " +
+                "filled with strange glowing crystals. You hear a voice echoing up from the abyss,\n " +
+                "calling your name.\n" +
+                "Do you 'climb down' or 'pull yourself back up'?\n");
+
+        storiesStorage[17] = ("█████████████████████▓▓▓▓▓▓▓▓▓██████████████████\n" +
+                "████████████████████▓▓▓▓▓▓▓▓▓▓██████████████████\n" +
+                "████████████████████▓▓▓▓▓▓▓▓▓▓██████████████████\n" +
+                "████████████████▓███▓▓▓▓▓▓▓▓▓▓██████████████████\n" +
+                "████████████████▓███▓▓▓▓▓▓▓▓▓▓██████████████████\n" +
+                "████████████████████▓▓▓▓▒▓▓▓▓▓█████▒████████████\n" +
+                "█████████████░██▓▓▓█▓▓▓▓▒▒░▓▓▓▓██▓▒ ▒▓██████████\n" +
+                "██████████▓███▓▓░░▓▓▓▓▒▒░▒▒▓▓▓▓▓▓██▒████████████\n" +
+                "███████████▓██▓▓▒▓▓▓▓▓▓▒ ░▒▓▓▓▓▓▓▓▓█████████████\n" +
+                "████████████▓▓▓▓▓▓ ▓▓▒▒  ░░▓▓▓▓▓▓▓▓▓▓███████████\n" +
+                "██▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒ ░▒ ▒▒░ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█\n" +
+                "███▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒ ░▓▓▓ ░▓▓▓ ▒▓▓▓▓░▓▓▓▓▓▓▓▓▓▓██\n" +
+                "██▓▓▓▓▓▓▓▓▓▒▓▒▒▒▒  ▒░░░░ ░░░░▒░ ░▒▒▒▒▓▒▒▓▓▓▓▓▓▓█\n" +
+                "██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░▓▓▒▒ ░▒▓▓▒ ▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓█\n" +
+                "███▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ░▒▓ ░▓▒░ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█\n" +
+                "████████████▓▓░▓▒▓▓▓▓▓ ░ ▒░░▓▓▓▓▓▒▓▓████████████\n" +
+                "█████████████▓▒▒ ░░▓▓▓▒   ░▓▓▓▓░  ░▒████████████\n" +
+                "█████████████▓▓▓▒▓▓▓▓▓▒▒░▒▒▓▓▓▓▓▓▒▓█████████████\n" +
+                "████████████▓███▓▓▓▓▓▓▓▓░▒▓▓▓▓▓▓████████████████\n" +
+                "████████████▒████▓█▓▓▓▓▓▒▒▓▓▓▓██▓███████████████\n" +
+                "████████████████████▓▓▓▓▒▓░▓▓▓██████████████████\n" +
+                "██████████████▓▓▓▓▓▓▓▓▓▓▒▒▓▓▓▓▓▓▓▓▓█████████████\n" +
+                "██████▓▓▓▓▓▓▓▓▒▒░░░           ░░░▒▒▓▓▓▓▓▓▓▓▓████\n" +
+                "██████████▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████\n" +
+                "█████████████████████▓▓▓▓▓▓▓▓███████████████████\n" +
+                "████████████████████████▓▓██████████████████████\n" +
+                "The crystals below seem to pulse with energy,\n " +
+                "illuminating the chasm in an otherworldly light.\n" +
+                "The voice continues to call your name, growing more insistent.\n " +
+                "Do you 'climb down to investigate' or 'ignore the voice and pull yourself up'?\n");
+
+        storiesStorage[18] = ("██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "██████████▓▒▒█████████████████████████████████\n" +
+                "██████████▓▓▒▒▒▒▒▒▒█▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓██████████\n" +
+                "██████████▓▓▒▒▓▓█▒▒▒▒▓███████████ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒█░▒▒░▓███████████ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒█░▒░░▓███████████ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒▓░▒░░▓███████████ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒█░▒░░▓█▓▓▓▓▓▓▓▓██ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒█░▒░░▓▓▓▓▓▓▓▓▓▓▓▓ ▒▓██████████\n" +
+                "██████████▓▒▒▒▒▒█░▒░░▓▓▓▓▒▒▒▒▓▓█▓ ▒▓██████████\n" +
+                "██████████▓▒▒░▒░█░▓█░▓▓▓▒▒ ░▒▒▓▓▓ ▒▓██████████\n" +
+                "█████████████▓▒▒▒▒▒▒░▓▓▓▒░ ░▒▒▓▓▓ ▒▓██████████\n" +
+                "██████████▓▒▒▒▒▒▒▒▒▒░▓▓▓▒░ ░▒▒▓▓▓ ▒▓██████████\n" +
+                "██████████▓▓▒░▒▒█░▒░░▓▓▒▒░░░▒▒▒▒▓ ▒▓██████████\n" +
+                "██████████▓▓▒░▒▒█░▒░░▓▒▒░░░░░▒▒▒▒ ▒▓██████████\n" +
+                "██████████▓▓▒▒▒▒█░▒░░▓▒░░░░░░░░▒▒ ▒▓██████████\n" +
+                "████████▓█▓▓▒▒▒▒█░▒ ░▓░░░░░░░░░ ▒ ▒▓██████▓███\n" +
+                "▓█▓█▓▓██▓█▓▓▒░▒▒█▒▒▒▒▓░░░░░░░░░░░ ▒▓▓▓██▓▓█▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓█▓▓▒▒▒▒▒▒▒█▓░░░░░░░░░░░░░ ▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓█▓▓▒▒▒██▓▓░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓██▓▓█▓▓▓▓░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓" +
+                "You pull yourself back up and find yourself\n " +
+                "in a small room with a single door. As you approach the door,\n " +
+                "it creaks open slowly, revealing a long hallway lined with mirrors.\n " +
+                "Each mirror reflects a different version of yourself,\n " +
+                "some familiar, others strange and distorted.\nDo you 'walk through the hallway' or 'turn back'?\n");
+
+        storiesStorage[19] = ("████████████▒█████▒▒▒▒▒▒▒▒▒▒▒█████████████▒███\n" +
+                "██████▒██████▒███▓▒▒▒▒▒▒▒▒▒▒▒▒████████████████\n" +
+                "█▒████████████░██▒▒▒▒▒▒▒▒▒▒▒▒▒█████████▒██████\n" +
+                "███████████████▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████████▒██\n" +
+                "████████████████▒▒▓▒▒▒▒▒▒▒▒▒▒▒▒▒█████████▒████\n" +
+                "███████████████▒▒▒▒▒▒▒   ▒▒▒▒▓▒▒██████████████\n" +
+                "██████████████▓▒▒▒ ░   ░░▒▒▒▒ ▒▒▓█████████████\n" +
+                "██████▓▓█████▓▒░ ▒   ░   ░▒▒▒▒▒ ▒▓▓████▓██████\n" +
+                "██████▓▓█████▓ ▒▒▒ ▒▒▒▒░▒▒▒░ ▒▒▒▒▒▓████▓▓█████\n" +
+                "██████▓▓███▓▓ ▒▒▒░▒▒▒▒   ▒▒ ▒▒▒▒▒▒▒▓███▓▓█████\n" +
+                "██████▓▓██▓▓▒▓▓▓ ▒▒▒ ▒░  ▒ ▒▒▒  ██ ▓▓██▓▓█████\n" +
+                "██████▓▓██▓▓         ▒▒ ▒ ▒        ▓▓██▓▓▓████\n" +
+                "██████▓▓██▓▓▒▓██ █▓▓ ▒▒ ▒▓ ▓▓█▓░██ ▓▓██▓▓▓████\n" +
+                "██████▓▓█▓▓▓▓ ███ █▒▓▓░ ▒▓▓ █▓▒██▓▒▓▓▓█▓▓▓████\n" +
+                "██████▓▓█▓▓▓▓▓ ███░ ███ ███▓  ██▓░▓▓▓▓▓▓▓▓████\n" +
+                "██████▓▓█▓▓▓▓▓▓ ░████▓   ▓█████ ▓▓▓▓▓▓▓▓▓▓████\n" +
+                "██████▓▓▓▓▓▓▓▓▓▓▒░░████ ████▒ ▒▒▓▓▓▓▓▓▓▓█▓████\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒    ▒▒▒▒▒▒▒▒▒▓▓▒▓▓▓▓▓▓▓▓\n" +
+                "▓▓▓▓▓▓▓▒▒▒▒▒▒░    ░▓▓▓▓▓▓█▓▓▓░    ▒▒▒▓▓▒▓▓▓▒▓▓\n" +
+                "▓▓▒▓▓▒▒▓▓▓▒▒▒    ▓▓▓▓▓█▓█▓▓▓▓▓▒   ░▒▒▒▓▓▓▒▓▓▓▒\n" +
+                "▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒░ ░▒▒▒▒▒▒▒▒▒▓▓▓▓▒▓▓▓▓▒▓▓\n" +
+                "▓▓▓▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▒▒▒ ░▒▒▒░▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓\n" +
+                "████▓███▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒ ░▒▓▓▓▓▓▓▓▓███▓▓███████\n" +
+                "███████▒██▓█▓▒▓▓▓▓▓▓▓▓▓ ▒▒▓▓▓▓▓▓▓█▓▒██████▒███\n" +
+                "████████████▒██████▓██░░░▓█████████████████▒██\n" +
+                "As you enter the final room, the glowing object hums louder, and suddenly\n" +
+                "the ground beneath you shakes violently. You approach the glowing\n" +
+                "symbol on the wall, and without thinking, you touch it. The room fills\n" +
+                "with light, and you feel yourself being pulled into another dimension.\n" +
+                "Congratulations! You have unlocked the **Good Ending**. The knowledge\n" +
+                "you've gained will reshape your world and beyond.\n");
+
+        storiesStorage[20] = ("██████████████████████████████████████████████\n" +
+                "██████████████████████████████████████████████\n" +
+                "█████████████████████▓▓▓██████████████████████\n" +
+                "███████████████▓▓▒ ░ ▒ ▒▒░░░▓▓████████████████\n" +
+                "██████████▓▒ ░▒ ░   ░ ▒▒░░ ▒ ▒▒▒ ▓▓███████████\n" +
+                "██████▓▓▒  ░▒ ░ ▒▒░ ░    ▒ ▒ ▒▒░░▒░  ▓▒███████\n" +
+                "██████▓ ▒▒ ▒▓▓▒ ▒░░ ▒▒  ▒  ▒▒  ▒▓▓░░▒▒▒███████\n" +
+                "██████▓  ▓░ ▒  ▒ ▒▓▒░░▒░ ▒▓▓▒ ▒▓▒ ▒ ░▒▒███████\n" +
+                "██████▓  ▒       ░▓ ▓ ▒▓ ▒▒░  ▒▒▒ ▒▒▓▓▒███████\n" +
+                "██████▓▒▒   ▒    ░░ ▓▒▒▓░    ▒▓▓▒  ░▒░▒███████\n" +
+                "██████▓ ▒▒░ ░ ▒▒ ░▓  ▓▓▓▒▒░░  ▓▒▓▓▒  ▒▒███████\n" +
+                "██████▓ ▒ ░ ▒ ▒ ▓░▒▒▒▒▓▓ ░ ▒    ▓▒ ▒▒▒▒███████\n" +
+                "██████▓  ▒▒ ▒▓ ▒ ░▓▒ ▓▒▓ ▒ ▒▒▓░ ▒▓▒▒▒ ▒███████\n" +
+                "██████▓ ▒▓▒▓░▓ ░▓░▒░░ ▒▒▒▒▓  ▒▓░▓  ▒░▓▒███████\n" +
+                "██████▓ ▒▒▒ ▒ ▒░▒▒░▒▓ ▒▓▓▒  ▒▒▒▒▒░▒░░▒▒███████\n" +
+                "██████▓ ▓▒▒ ░▒▒░▒░░   ▒▓▒░ ░░▒▓▒▒  ▒░▒▒███████\n" +
+                "███████▒ ░░ ▒ ▒▒░░░▒ ▓▒▓▒ ░▒ ▒▒▓ ░▒▒ ▒▓███████\n" +
+                "███████████▒▒▒ ░▒░ ░ ▓▒▓▓▒▒░ ░  ▒▓▒█▓█████████\n" +
+                "▓█▓████▓▓░███▓▓█▓▒▒ ▒▓▓▓▒ ▒▒▓██▓████▒ ▓▓██▓██▓\n" +
+                "▓▓█▓▓▓▓░▓██▓█▓█▒███▒█▒▓███████▓░██▓██▓ ▒▓▓▓▓▓▓\n" +
+                "▓▓▒░░ ▒░█████░▒░███░█▓▒▓█████▓▓███████ ░▒▓█▓▓▓\n" +
+                "▓▒█▓▓░░░▒██▓▒▓▒████▒█░▓ █▓▓███░▒░███░░░░░▓█▒▓▓\n" +
+                "▓▓▓▓█▓▓▒▒▒▒░░░░███▓██▓▒▒██▓▓███  ░█ ▓▓█▒██████\n" +
+                "█▓██▓▓██▓▒▒▓▓▒░░░▒░ ▓█▒▓▓░░░░ ▓▓▓███░▓█▓▓▓███▓\n" +
+                "█████████▓▓███▓▓▓▓▒█▒▒▒▒▓▓▒██▓▒▓▓▓████████▓███\n" +
+                "You stand before the ancient machine, which begins to hum ominously.\n" +
+                "You've gathered pieces of information, but not enough to fully\n" +
+                "understand the machine's purpose. You attempt to stop it, but\n" +
+                "as you try, the machine explodes, and you are caught in the blast.\n" +
+                "This is the **Neutral Ending**. You tried your best, but the machine\n" +
+                "was beyond your understanding. The world may never know what it was.\n");
+
+        storiesStorage[21] = ("▒▒█░▒▒▒█▒▒▒▒▒█░▒▒▒▓█████████▓░▒▒▒█░▒▒▒█▒▒▒▒█▓░\n" +
+                "▒▒█░▒▒▒█▒▒▒▒▒▓░▒▒▒▓▓████████▓░▒▒▒█░▒▒▒█▒▒▒▒▓█░\n" +
+                "████████▒████▓▓▓███▓████████▒█████▓████▒████▓▓\n" +
+                "▒▒█░▒▒▒█▒▒▒▒▒█░▒▒▒▓█████████▒▒▒▒▒█░▒▒▒▓▒▒▒▒▓█░\n" +
+                "▒▒█░▒▒▒▓▒▒▒▒▒█░▒▒▒▓▓█████████░▒▒▒█░▒▒▒▓▒▒▒▒▓█░\n" +
+                "███████▓▒██████████▓████████▓█▓██▓▒████▓██████\n" +
+                "▒▒█░▒▒▒▓░▒▒▒▒█░▒▒▒▓▓████████▒▒▒▒▒█░▒▒▒▓▒▒▒▒▒█░\n" +
+                "▒▒█░▒▒▒█▒▒▒▒▒▓ ▒▒▒▓▓██▓██████▒▒▒▒█░▒▒▒█▓▒▒▒▓█░\n" +
+                "▓██▒███▓▒█▓█▓▓▓▓███▓████████▓▓▓██▓░████▒████▓░\n" +
+                "▒▒█░▒▒▒▓▒▒▒▒▒█░▒▒▒▓▓████████▒░▒▒▒█░▒▒▒▓▒▒▒▒▓█░\n" +
+                "▒▒█▒▒▒▒▓▒▒▒▒▒▓░▒▒▒▓▓█████████░▒▒▒▓░▒▒▒▓▒▒▒▒▓█░\n" +
+                "█▓█▓███▓▒▓██▓▓░▓█▓███████████░█▓▓█░██▓▓▒███▓█░\n" +
+                "░░█░░░░░▒░░░░█░░░░░▓████████▓░░░░▓░░░░░▒░░░░█░\n" +
+                "▒▒█░▒▒▒█▒▒▒▒▒▓░▒▒▒▓▓█████████░▒▒▒█░▒▒▒▓▒▒▒▒▓█░\n" +
+                "▒▓█▒▒▒▒█▒▒▒▒▒▓░▒▒▒███▓██████▓▒▒▒▓▓░▒▒▓▓▒▒▓▓▓█░\n" +
+                "░░█▒░░░░░░░░░█▒░░░▒▓██▓█▓████░░░░█░░░░░▒░░░░▓░\n" +
+                "▒▒█▒▒▒▒▓▒▒▒▒▒█ ▒▒▒▓▓██  ▒████░▒▒▒█░▒▒▒▓▒▒▒▒▓█░\n" +
+                "▓▓█▒▒▒▓▓▒▒▒▓▓▓░▒▒▒▓██▒▓░▓▒▒░▓▒▓▓▓▓░▓▒▓▒▒░▓▓▓▓░\n" +
+                "░░█▒░░░░░░░░░█░░░░░▓██▓░▓████ ░░░▓░░░░░▒░░░░▓░\n" +
+                "▒▒█░▒▒▒▓▒▒▒▒▒▓░▒▒▒▓▓██▒█▒████░▒▒▒▓░▒▒▒▓▒▒▒▒██░\n" +
+                "▒▒█▒▒▒▒▓▒▒▒▒▓▓░▒▒▒▓██████▓██░▒▒▒▒▓░▓▒▒▓▒░▓▓▓█░\n" +
+                "░░█▒░░░▒▒░░░░█▒░░░░▓█████████░░░░▓░░░▒▒▒▒░░░▓▒\n" +
+                "▒▒█▒▒▒▒▓▒▒▒▒▒▓░▒▒▒▓█▓▓▓█▒▒▒▓▓░▒▒▒█░▒▓▓▓▓▒▒▒▓█░\n" +
+                "▓▓█▒▒▓▓▓▒▒▒▓▓▓░▒▒▒▓▓▒░░▒░▒░░█▒▓▓▓█░▓▓▓█▓▒▓▓██░\n" +
+                "████▓▓▓▓█▓▓▓▓█▓▒▒▒▓░░░░▓░░░░░▒▒▒▒▒▓▓▓▓▓█▓█▓▓██\n" +
+                "The walls close in, and despite your efforts, you are unable to escape.\n" +
+                "The ancient powers that once controlled this place have won.\n" +
+                "You fall into darkness as the trap claims another victim.\n" +
+                "This is the **Bad Ending**. You fought bravely but could not escape your fate.\n");
+
+        // Introduction text
+        System.out.println("███████████████████████████████████████\n" +
+                "███████████████████████████████████████\n" +
+                "███████████████████████████████████████\n" +
+                "███████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░█████\n" +
+                "██████ ▒▓███████████████████████▒▒▓████\n" +
+                "██████ ▒████████░███████░██░████ ▒▓████\n" +
+                "██████ ▒█████▓██░█░█░▓█▒█░▒░▒▒▒█ ▒▓████\n" +
+                "██████ ▒███▓░▒▒█░░░█ ███ ██░██▓█ ▒▓████\n" +
+                "██████ ▒████░▒▒███▒▒░▓░█▒▒▒█░░░█ ▒▓████\n" +
+                "██████ ▒█████░█████  ███░▓█░░░██ ▒▓████\n" +
+                "██████ ▒█████░█████████░███░▒░▓█ ▒▓████\n" +
+                "██████ ▒█████████▓█░████ ░█░░███ ▒▓████\n" +
+                "██████ ▒▒███████████████████████▒▒▓████\n" +
+                "██████ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒▒▒▒▒████\n" +
+                "███████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒▒▒▒▒██████\n" +
+                "███████████████████████████████████████\n" +
+                "█████████████████░░▒▒▒█████████████████\n" +
+                "█████▒▒▓▓▓▓▓█░░░███████████░▓▓█▒█▓▓▓███\n" +
+                "█████████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓████████████\n" +
+                "█████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█▒▓▓\n" +
+                "███████████████████████████████████████\n" +
+                "\nYou find yourself in a dimly lit control room, the walls flickering\n " +
+                "with the glow of flashing lights and monitors. They show live feeds of desolate,\n " +
+                "empty streets stretching in all directions. The air is heavy with tension,\n " +
+                "and the distant hum of machines fills your ears. On a desk nearby, an old,\n " +
+                "dust-covered radio sits beside a cryptic note. To the north, east, west,\n" +
+                " and south, doors and corridors stretch out into the unknown.\n" +
+                "An item lies on the desk, faintly glowing. The metallic door to the south hums with energy, calling to you.\n" +
+                "Do you 'open the door', 'go north', 'go east', 'go west', or 'go south'?\n " +
+                "Perhaps you want to 'take the item', 'drop an item', or 'use an item'?\n");
+
+
+        // Main game loop
         while (true) {
             String action = getInput();
             if (action != null) {
-                currentState = takeAction(action, currentState, statesMatrix);
-                System.out.println(currentState);
+                currentState = takeAction(action, currentState, statesMatrix, storiesStorage);
                 printState(currentState, storiesStorage);
+
+                // If the player reaches an ending state, end the game
+                if (currentState == 19 || currentState == 20 || currentState == 21) {
+                    System.out.println("The game is over. Thank you for playing!");
+                    break;
+                }
             }
         }
     }
