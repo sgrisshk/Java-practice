@@ -1136,27 +1136,52 @@ public class Game {
         };
     }
 
-    //Method of getting users name
+
+    // Recursive method to tell the full story using DFS
+    public static void tellStory(int currentState, String[][] transMatrix, String[] stateArray, boolean[] visited) {
+        // If the state has been visited already, skip it (to avoid infinite loops)
+        if (visited[currentState]) {
+            return;
+        }
+
+        // Mark the state as visited
+        visited[currentState] = true;
+
+        // Print the current state's story
+        System.out.println(stateArray[currentState]);
+
+        // Go through all possible transitions for the current state
+        for (int i = 0; i < transMatrix[currentState].length; i++) {
+            if (transMatrix[currentState][i] != null && !transMatrix[currentState][i].isEmpty()) {
+                System.out.println("Action: " + transMatrix[currentState][i]);  // Print the action leading to the next state
+                tellStory(i, transMatrix, stateArray, visited);  // Recursively tell the story for the next state
+            }
+        }
+    }
+
+    // Method to get user's name
     public static void getName() {
         System.out.println("\nWhat's your name?:");
         String name = scanner.nextLine();
         System.out.println("Hey, " + name + "! Enjoy the game:)\n");
     }
 
-
+    // Method to get valid actions for the current state
     public static String[] getValidActions(int currentState, String[][] stateMatrix) {
         return stateMatrix[currentState];
     }
 
+    // Method to get user input and validate the action
     public static String getInput(String[] validActions) {
         System.out.println("\nWhat do you want to do?");
         String action = scanner.nextLine().trim().toLowerCase();
 
+        // Special command to exit the game
         if (action.equals("666")) {
             System.exit(0);
         }
 
-
+        // Validate user input
         for (String validAction : validActions) {
             if (action.equals(validAction.toLowerCase())) {
                 return action;
@@ -1167,13 +1192,10 @@ public class Game {
         return null;
     }
 
-
-    // Method that gets a player action and allows to understand which story we should print
+    // Method to take an action and return the new state
     public static int takeAction(String action, int currentState, String[][] stateMatrix) {
-        // Retrieve the valid actions for the current state
         String[] validActions = stateMatrix[currentState];
 
-        // Check for special game-ending states or specific transitions
         if (currentState == 10 && action.equalsIgnoreCase("use item")) {
             System.out.println("You used the item to stabilize the machine...");
             return 19;  // Good Ending
@@ -1189,34 +1211,30 @@ public class Game {
             return 21;  // Bad Ending
         }
 
-        // Loop through valid actions for the current state
+        // Loop through valid actions and transition to the new state
         for (int i = 0; i < validActions.length; i++) {
             if (validActions[i].equalsIgnoreCase(action)) {
-                int actionIndex = i;
-                return mapActionToState(actionIndex, currentState);
+                return mapActionToState(i, currentState);
             }
         }
 
-        // If the action is not valid, notify the player and stay in the same state
         System.out.println("Invalid action! Please try again.");
-        return currentState;  // Remain in the current state if no valid action is matched
+        return currentState;
     }
 
-    // Map actions to new states
+    // Mapping actions to new states based on current state
     public static int mapActionToState(int actionIndex, int currentState) {
-        // Map actions to specific next states based on current state
-        switch (currentState) {
-            case 0:
-                if (actionIndex == 0) {
-                    return 1; //open door
-                } else if (actionIndex == 1) {
-                    return 4; //inspect room
-                }
-                break;
+        switch (currentState) {case 0:
+            if (actionIndex == 0) {
+                return 1; //open door
+            } else if (actionIndex == 1) {
+                return 8; //inspect room
+            }
+            break;
 
             case 1: // Corridor with figure
                 if (actionIndex == 0) {
-                    return 9;
+                    return 9; //
                 } else if (actionIndex == 1) {
                     return 2;
                 }
@@ -1224,57 +1242,57 @@ public class Game {
 
             case 2: // Trap in corridor
                 if (actionIndex == 0) {
-                    return 21; // Defuse trap
+                    return 21; // Defuse trap -> переход в состояние 6
                 } else if (actionIndex == 1) {
-                    return 11; // Fight
+                    return 11; // Fight -> переход в состояние 5 (chamber with machine)
                 }
                 break;
 
             case 3: // Ladder room
                 if (actionIndex == 0) {
-                    return 6; // Investigate vent
+                    return 6; // Investigate vent -> переход в состояние 6
                 } else if (actionIndex == 1) {
-                    return 4; // Climb ladder
+                    return 4; // Climb ladder -> переход в состояние 4
                 }
                 break;
 
             case 4: // Staircase
                 if (actionIndex == 0) {
-                    return 13; // Open secret passage
+                    return 13; // Open secret passage -> переход в состояние 13
                 } else if (actionIndex == 1) {
-                    return 12; // Drop item
+                    return 12; // Drop item -> переход в состояние 12
                 }
                 break;
 
             case 5: // Chamber with machine
                 if (actionIndex == 0) {
-                    return 9; // Fight
+                    return 9; // Fight -> переход в состояние 9
                 } else if (actionIndex == 1) {
-                    return 11; // Hide
+                    return 11; // Hide -> переход в состояние 11 (hallway with footsteps)
                 }
                 break;
 
             case 6: // Hidden passage with device
                 if (actionIndex == 0) {
-                    return 14; // Talk
+                    return 14; // Talk -> переход в состояние 14
                 } else if (actionIndex == 1) {
-                    return 10; // Use item
+                    return 10; // Use item -> переход в состояние 10 (machine room)
                 }
                 break;
 
             case 7: // Artifact room with figure
                 if (actionIndex == 0) {
-                    return 9; // Talk
+                    return 9; // Talk -> переход в состояние 9
                 } else if (actionIndex == 1) {
-                    return 11; // Hide
+                    return 11; // Hide -> переход в состояние 11
                 }
                 break;
 
             case 8: // Trap room
                 if (actionIndex == 0) {
-                    return 11; // Run
+                    return 11; // Run -> переход в состояние 11
                 } else if (actionIndex == 1) {
-                    return 5; // Fight
+                    return 5; // Fight -> переход в состояние 5
                 }
                 break;
 
@@ -1296,49 +1314,49 @@ public class Game {
 
             case 11: // Hallway with footsteps
                 if (actionIndex == 0) {
-                    return 12; // Hide
+                    return 12; // Hide -> переход в состояние 12
                 } else if (actionIndex == 1) {
-                    return 13; // Keep running
+                    return 13; // Keep running -> переход в состояние 13
                 }
                 break;
 
             case 12: // Room with machinery
                 if (actionIndex == 0) {
-                    return 15; // Take item
+                    return 15; // Take item -> переход в состояние 15
                 } else if (actionIndex == 1) {
-                    return 14; // Investigate noise
+                    return 14; // Investigate noise -> переход в состояние 14
                 }
                 break;
 
             case 13: // Staircase into darkness
                 if (actionIndex == 0) {
-                    return 16; // Enter the passage
+                    return 16; // Enter the passage -> переход в состояние 16
                 } else if (actionIndex == 1) {
-                    return 17; // Go back
+                    return 17; // Go back -> переход в состояние 17
                 }
                 break;
 
             case 14: // Wall with rhythmic tapping
                 if (actionIndex == 0) {
-                    return 18; // Tap back
+                    return 18; // Tap back -> переход в состояние 18
                 } else if (actionIndex == 1) {
-                    return 16; // Open hidden door
+                    return 16; // Open hidden door -> переход в состояние 16
                 }
                 break;
 
             case 15: // Falling floor
                 if (actionIndex == 0) {
-                    return 17; // Grab onto ledge
+                    return 17; // Grab onto ledge -> переход в состояние 17
                 } else if (actionIndex == 1) {
-                    return 18; // Brace for impact
+                    return 18; // Brace for impact -> переход в состояние 18
                 }
                 break;
 
             case 16: // Ledge with crystals
                 if (actionIndex == 0) {
-                    return 17; // Climb down
+                    return 17; // Climb down -> переход в состояние 17
                 } else if (actionIndex == 1) {
-                    return 18; // Pull yourself back up
+                    return 18; // Pull yourself back up -> переход в состояние 18
                 }
                 break;
 
@@ -1359,98 +1377,56 @@ public class Game {
                 break;
 
             default:
-                return -1;
+                return -1; // Если действие не распознано, вернётся -1 для ошибки
         }
         return -1;
-    }
 
+        }
 
-    // Printing method
+    // Printing the current state story
     public static void printState(int currentState, String[] storiesStorage) {
         System.out.println(storiesStorage[currentState]);
     }
-
-    public static void main(String[] args) {
-        scanner = new Scanner(System.in);
-        System.out.println("┏┳┓┓     ┏┓┓            ┓  ┏┓   ┓ \n" +
-                " ┃ ┣┓┏┓  ┗┓┣┓┏┓╋╋┏┓┏┓┏┓┏┫  ┃┃┏┓╋┣┓\n" +
-                " ┻ ┛┗┗   ┗┛┛┗┗┻┗┗┗ ┛ ┗ ┗┻  ┣┛┗┻┗┛┗\n");
-
-        getName();
-        int currentState = 0;
-        String[][] stateMatrix = initializeStateMatrix();
-        String[] stories = initializeStories();
-        //calculateAge();
-
-
-        // Introduction text
-        System.out.println("████████████████████████████████████████████████████████████████████████████▓███\n" +
-                "█▓█▓██▓███▓██▓█▓██▓██▓██████████▓█▓██▓██▓███▓▓▓▓▓▓▓█████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓▓\n" +
-                "█▓█▓██▓█▓█▓██▓█▓██▓███▓██▓█▓█▓██▓█▓██▓██▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓\n" +
-                "█▓█▓██▓███▓██▓████▓███▓██▓█▓█▓██▓█▓██▓██▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒\n" +
-                "█▓█▓█████████████▓█▓██▓██▓█▓█▓██▓█▓██▓██▓█▓▓▓▓▓▓▓▒░░░▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓░░▒▒▓▓▓▓\n" +
-                "█████▓██████████████████████████▓███████▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
-                "█▓█▓██▓██████▓█▓██▓██▓█▓██▓█▓██▓█▓██▓█▓█▓█▓▓▓▓▓▓▒▓▓▓▓▓▓░▒▓▓▓▓▓▓▓▓▓░▓▓▓▒▓▓▓▓▓█▓▓█\n" +
-                "█▓█▓██▓██▓███▓█▓▓█▓██▓█▓██▓█▓█▓▓█▓██▓█▓█▓█▓▓▓▓▓▓▒▓▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▓▓▓▓▓█▓███▓\n" +
-                "█████████████████████████████████▓██▓█▓█▓█▓▓▓▓▓▓▒▓▓▓▓▒▓▓▓▒▒▒▓▓▓▒▒▓▓▓▓▒▓▓▓▓▓▓▓░░░\n" +
-                "░░░░░░███▓██▒██▓░░░░░░░▓██▓█████████████▓█▓▓▓▓▓▓▒▓▓▓▓▒▓▓▓▒▒▒▒▒▒▒▒▒▒▒▓▒▓▓▓▓▓▓█░░░\n" +
-                "░░░░░░▒░░███▓█░▓░░░░░░░░▓░██████▓█▓██▓██▓█▓▓▓▓▓▓▒▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓█▓▓▓\n" +
-                "░░░░▓░░░░███▓░░░░█░░░░█░░░██████▓█▓██▓██▓█▓▒▒▓▒▓▒▓▓▓▓▒▒▒▒▒▒▒░░▒░░▒▒▒▒▒▒▒▒▓▓▓▓░░▒\n" +
-                "▓▓▓▓▓▓▓▓▓███▓▒▓▓▓▓▓▓▓▓▓▓▓▓██████▓█▓██▓██▓█▓▒▒▒▒▒▒▒▒▒▒▒▒▒░▓▒▒▒▒▒▒░▒▒▒▒▒▒▒▒▒▒▒▓▓▓█\n" +
-                "█░░░█░░░░███▓░░░░░░░░▓░░░░██████████████▓█▓▓▒▒▒▒▓▒▒▓▒▒▒▒▒▒▒▒░▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████\n" +
-                "░░░░░░▓░░███▓█░█░░░░░░░░░░███████▓█▒██▓█▓█▓▒▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒████████████\n" +
-                "░░░░░░▓█████▓██▓░░░░░░░░████████████████▓▓▓█▓▓▓▓▓▓███▓███▓▓█▓█▓▓██▓████████████▓\n" +
-                "▓▓▓▓▒▒▒▓▓▓██▒▓▓▓▒▒▒▒▒▒▒▒▒▓▒██████████████████████████████████████░▒▒░░▓▓████████\n" +
-                "██████████████████████████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒█████████▒▒░░░░▒███████\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░░░░░░████████░▒░░░░░▓██▓██\n" +
-                "█▓▓▓▓▓█▓█▓█▓▓▓█▓███▓█▓█▓▓█▒▓█████▓▓███████▓█▓▓▓████████▓▓▓▒█░██▓█▓██▓░░▒▒▒░█████\n" +
-                "▓███████▓█▓██▓▓██▓█████▓▓█▒▓████▓█▓█▓█▒████▓██████████████▒▓░██▓█▓█▓██▓░░▒▒░████\n" +
-                "████▓██▓█▓██▓▓░█▓░▓▓░▓▓▓██▒▓█▓▒█▒█▒█▒█▒█▓██▓█▓░▓▓░█▓░▓░▓▒█▒▓░█▓██▓█▓██▓█▓█████▓█\n" +
-                "▓▓▓▓▓▓▓█▓▓▓▓▓░▓▓▓▒▓░▓▓▓███▒███▓█▓█▒█▒█▒████████████████████▓░██▓█▓████▓█▓███████\n" +
-                "▓█▓▓█▓█▓░▓▓▓▓██▓█▓██▓▓████▒██▓█▓██▒█▓█▓████▓▓▓▓▓░░██░░▓▓▓▓▓▓░███████████████████\n" +
-                "█▓▓█▓█▓▓██▓▓█▓▓██▓█▓▓█████▒█▓███▓█▒█▒█▒████▓▓░░█▓██████▒▓▓▓▓░███████████████████\n" +
-                "▒▒▒▒▒▒░░░░░░░░▒░░░░░░█████▒█▓███▒█▓█▓██████▓▓░██▓░███░██░▓▓▓░███████████████████\n" +
-                "████████████████████▓▓▓▓▓▓▒█▒▓████▓▓▓▓██▓▓█▓▓░░█░████░█░░▓▓▓░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒█▓▓█▓▓▓▓▓▓▓█▓▓▓█▓▓████▒██▓▓██▓▓▓▓░▒▒▒▒▒▒▒▒▒▒▒▒▓▒▓▓▓▓▓\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓█████████████▒▓█░███▒██████░▓█▓▓░█░████████▓▓▓▓░▒▒▒▒▒▒▒██░░░░▒▒▒▒▒▒\n" +
-                "▓▓▓▒▒▒▒▒▓▓▓███████████████▒▒███▓▓███████▓▓█▓█▒▓▓██░░░▓▓██▓▓▓░▒▒▒▒▒▒▒██████▓▓▓███\n" +
-                "▓▓▓▒▒▒▒▒▓▓█████████████████▓███████████████████████████████▓░▒▒▒▒▒▒▒▒▒▒██▓▓▓████\n" +
-                "▓▓▓▒▒▒▒▒█▓████▓▓▓▓▓▓▓▓▓▓▓▓███████▓▓██▓▓▓▓▓▓▓▓▓██▓▓▓▓███▓▓▓█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n" +
-                "▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n" +
-                "▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░░▓██▒▒▒▒▒▒▒▒▒▒\n" +
-                "▓▓▓█▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█░█░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒█▒░▓███▒▒▒▒▒▒▒▒▒▒▒▒\n" +
-                "▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒▒▒█▒▒██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█░██░░░███░███░██████░░█░▒▒▒▒▒░░███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▓▒▒▒▒▒▒▒▒▒█░░░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒░░░░░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓████▒░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██████████████████████████░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
-                "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\n" +
-                "████████████████████████████████████████████████████████████████████████████████\n" +
-                "████████████████████████████████████████████████████████████████████████████████\n" +
-                "\nYou find yourself in a dimly lit control room, the walls flickering\n " +
-                "with the glow of flashing lights and monitors. They show live feeds of desolate,\n " +
-                "empty streets stretching in all directions. The air is heavy with tension,\n " +
-                "and the distant hum of machines fills your ears. On a desk nearby, an old,\n " +
-                "dust-covered radio sits beside a cryptic note\n" +
-                "The metallic door to the south hums with energy, calling to you.\n" +
-                "Do you 'open door' or 'inspect room'?\n ");
-
-
-
+    // Main interactive gameplay loop
+    public static void interactiveGameplay(int currentState, String[][] stateMatrix, String[] stories) {
         while (true) {
+            printState(currentState, stories);  // Print the current state story
 
+            // Get valid actions for the current state
             String[] validActions = getValidActions(currentState, stateMatrix);
-            String action = getInput(validActions);
+            if (validActions.length == 0) {
+                System.out.println("No further actions. The game ends here.");
+                break;
+            }
 
+            // Get user input for the next action
+            String action = getInput(validActions);
             if (action != null) {
                 currentState = takeAction(action, currentState, stateMatrix);
-                printState(currentState, stories);
             }
+
+            // Check for ending states
             if (currentState == 19 || currentState == 20 || currentState == 21) {
                 System.out.println("The game is over. Thank you for playing!");
                 break;
             }
         }
+    }
+
+    public static void main(String[] args) {
+        scanner = new Scanner(System.in);
+
+        // Set up the game
+        System.out.println("\nWhat's your name?");
+        String name = scanner.nextLine();
+        System.out.println("Hey, " + name + "! Enjoy the game:)\n");
+
+        // Initialize game states and stories
+        String[][] stateMatrix = initializeStateMatrix();
+        String[] stories = initializeStories();
+
+        // Start the interactive gameplay from state 0
+        int currentState = 0;
+        interactiveGameplay(currentState, stateMatrix, stories);
     }
 }
